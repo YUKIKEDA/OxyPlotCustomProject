@@ -10,9 +10,9 @@ namespace OxyPlotCustomProject
     /// </summary>
     public class CustomScatterLineSeries : ScatterErrorSeries
     {
-    /// <summary>
-    /// 新しい <see cref="CustomScatterLineSeries"/> のインスタンスを初期化します。
-    /// </summary>
+        /// <summary>
+        /// 新しい <see cref="CustomScatterLineSeries"/> のインスタンスを初期化します。
+        /// </summary>
         public CustomScatterLineSeries()
         {
             this.LineColor = OxyColors.Automatic;
@@ -20,25 +20,25 @@ namespace OxyPlotCustomProject
             this.LineJoin = LineJoin.Round;
         }
 
-    /// <summary>
-    /// 点を接続する線の色を取得または設定します。
-    /// </summary>
+        /// <summary>
+        /// 点を接続する線の色を取得または設定します。
+        /// </summary>
         public OxyColor LineColor { get; set; }
 
-    /// <summary>
-    /// 接続線の太さを取得または設定します。
-    /// </summary>
+        /// <summary>
+        /// 接続線の太さを取得または設定します。
+        /// </summary>
         public double LineThickness { get; set; }
 
-    /// <summary>
-    /// セグメント描画時の線の結合スタイルを取得または設定します。
-    /// </summary>
+        /// <summary>
+        /// セグメント描画時の線の結合スタイルを取得または設定します。
+        /// </summary>
         public LineJoin LineJoin { get; set; }
 
-    /// <summary>
-    /// シリーズを描画します: まず連続する点を接続する線を描き、その後基底クラスを呼んでエラーバーとマーカーを描画します。
-    /// </summary>
-    /// <param name="rc">描画コンテキスト。</param>
+        /// <summary>
+        /// シリーズを描画します: まず連続する点を接続する線を描き、その後基底クラスを呼んでエラーバーとマーカーを描画します。
+        /// </summary>
+        /// <param name="rc">描画コンテキスト。</param>
         public override void Render(IRenderContext rc)
         {
             // ActualPointsList を使って連続する有効な点を接続するセグメントを構築する（データ順序を保持）
