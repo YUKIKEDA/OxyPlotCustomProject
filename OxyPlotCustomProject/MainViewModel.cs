@@ -1,6 +1,7 @@
 using System;
 using OxyPlot;
 using OxyPlot.Series;
+using OxyPlot.Legends;
 
 namespace OxyPlotCustomProject
 {
@@ -12,6 +13,16 @@ namespace OxyPlotCustomProject
         {
             this.PlotModel = new PlotModel { Title = "CustomScatterLineSeries Demo" };
 
+            // 凡例の表示はシリーズの Title を設定し、明示的に Legend を追加することで行います
+            // OxyPlot のバージョンにより PlotModel に Legends コレクションが用意されているのでそれを使う
+            var legend = new Legend
+            {
+                LegendTitle = "凡例",
+                LegendPosition = LegendPosition.TopRight,
+                LegendPlacement = LegendPlacement.Outside
+            };
+            this.PlotModel.Legends.Add(legend);
+
             var series = new CustomScatterLineSeries
             {
                 LineColor = OxyColors.SteelBlue,
@@ -20,6 +31,9 @@ namespace OxyPlotCustomProject
                 MarkerFill = OxyColors.Black,
                 MarkerSize = 8 // Use series-level MarkerSize
             };
+
+            // シリーズ名（凡例に表示されるラベル）
+            series.Title = "サンプル系列";
 
             // Add some sample points with error bars
             // Pass double.NaN for per-point size so the series' MarkerSize is used
