@@ -11,16 +11,6 @@ namespace OxyPlotCustomProject
     public class CustomScatterLineSeries : ScatterErrorSeries
     {
         /// <summary>
-        /// 新しい <see cref="CustomScatterLineSeries"/> のインスタンスを初期化します。
-        /// </summary>
-        public CustomScatterLineSeries()
-        {
-            this.LineColor = OxyColors.Automatic;
-            this.LineThickness = 1.0;
-            this.LineJoin = LineJoin.Round;
-        }
-
-        /// <summary>
         /// 点を接続する線の色を取得または設定します。
         /// </summary>
         public OxyColor LineColor { get; set; }
@@ -34,6 +24,16 @@ namespace OxyPlotCustomProject
         /// セグメント描画時の線の結合スタイルを取得または設定します。
         /// </summary>
         public LineJoin LineJoin { get; set; }
+
+        /// <summary>
+        /// 新しい <see cref="CustomScatterLineSeries"/> のインスタンスを初期化します。
+        /// </summary>
+        public CustomScatterLineSeries()
+        {
+            this.LineColor = OxyColors.Automatic;
+            this.LineThickness = 1.0;
+            this.LineJoin = LineJoin.Round;
+        }
 
         /// <summary>
         /// シリーズを描画します: まず連続する点を接続する線を描き、その後基底クラスを呼んでエラーバーとマーカーを描画します。
