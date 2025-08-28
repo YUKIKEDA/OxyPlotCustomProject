@@ -37,5 +37,3 @@ model.Series.Add(series);
 var pv = new PlotView { Model = model };
 // PlotView をウィンドウに配置してください
 ```
-
-ビルド済み: ソリューションはこの変更時点でビルドに成功しています。
