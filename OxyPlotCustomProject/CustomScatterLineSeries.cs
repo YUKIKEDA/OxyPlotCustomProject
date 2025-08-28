@@ -1,4 +1,3 @@
-// エラーバーとマーカーを保持しつつ、ScatterErrorSeries の点を線で接続するカスタムシリーズ。
 using OxyPlot;
 using OxyPlot.Series;
 

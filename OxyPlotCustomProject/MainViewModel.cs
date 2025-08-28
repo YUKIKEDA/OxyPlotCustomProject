@@ -1,7 +1,6 @@
-using System;
 using OxyPlot;
-using OxyPlot.Series;
 using OxyPlot.Legends;
+using OxyPlot.Series;
 
 namespace OxyPlotCustomProject
 {
