@@ -1,20 +1,18 @@
-// Custom series that connects ScatterErrorSeries points with lines while keeping error bars and markers.
-using System;
-using System.Collections.Generic;
+// エラーバーとマーカーを保持しつつ、ScatterErrorSeries の点を線で接続するカスタムシリーズ。
 using OxyPlot;
 using OxyPlot.Series;
 
 namespace OxyPlotCustomProject
 {
     /// <summary>
-    /// A custom series that inherits from ScatterErrorSeries and draws connecting lines between points.
-    /// It renders a polyline (as segments) between consecutive valid points, then defers to base for markers and error bars.
+    /// ScatterErrorSeries を継承し、点を線で接続して描画するカスタムシリーズです。
+    /// 有効な連続点間にセグメントとしてポリラインを描画し、マーカーとエラーバーの描画は基底クラスに委譲します。
     /// </summary>
     public class CustomScatterLineSeries : ScatterErrorSeries
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CustomScatterLineSeries"/> class.
-        /// </summary>
+    /// <summary>
+    /// 新しい <see cref="CustomScatterLineSeries"/> のインスタンスを初期化します。
+    /// </summary>
         public CustomScatterLineSeries()
         {
             this.LineColor = OxyColors.Automatic;
@@ -22,28 +20,28 @@ namespace OxyPlotCustomProject
             this.LineJoin = LineJoin.Round;
         }
 
-        /// <summary>
-        /// Gets or sets the line color used to connect the points.
-        /// </summary>
+    /// <summary>
+    /// 点を接続する線の色を取得または設定します。
+    /// </summary>
         public OxyColor LineColor { get; set; }
 
-        /// <summary>
-        /// Gets or sets the thickness of the connecting line.
-        /// </summary>
+    /// <summary>
+    /// 接続線の太さを取得または設定します。
+    /// </summary>
         public double LineThickness { get; set; }
 
-        /// <summary>
-        /// Gets or sets the line join style when drawing segments.
-        /// </summary>
+    /// <summary>
+    /// セグメント描画時の線の結合スタイルを取得または設定します。
+    /// </summary>
         public LineJoin LineJoin { get; set; }
 
-        /// <summary>
-        /// Renders the series: first draws connecting lines between consecutive points, then calls base to draw error bars and markers.
-        /// </summary>
-        /// <param name="rc">The rendering context.</param>
+    /// <summary>
+    /// シリーズを描画します: まず連続する点を接続する線を描き、その後基底クラスを呼んでエラーバーとマーカーを描画します。
+    /// </summary>
+    /// <param name="rc">描画コンテキスト。</param>
         public override void Render(IRenderContext rc)
         {
-            // Build segments connecting consecutive valid points using the ActualPointsList (preserves data order)
+            // ActualPointsList を使って連続する有効な点を接続するセグメントを構築する（データ順序を保持）
             var actualPoints = this.ActualPointsList;
             if (actualPoints != null && actualPoints.Count > 0)
             {
@@ -58,7 +56,7 @@ namespace OxyPlotCustomProject
                         continue;
                     }
 
-                    // Skip invalid coordinates
+                    // 無効な座標をスキップ
                     if (double.IsNaN(dp.X) || double.IsNaN(dp.Y))
                     {
                         prev = null;
@@ -69,7 +67,7 @@ namespace OxyPlotCustomProject
 
                     if (prev.HasValue)
                     {
-                        // Only add segment if points are distinct
+                        // 点が異なる場合のみセグメントを追加
                         if (!sp.Equals(prev.Value))
                         {
                             segments.Add(prev.Value);
@@ -92,7 +90,7 @@ namespace OxyPlotCustomProject
                 }
             }
 
-            // Let the base class draw error bars and markers on top
+            // 基底クラスにエラーバーとマーカーの描画を任せる（上に重ねる）
             base.Render(rc);
         }
     }
