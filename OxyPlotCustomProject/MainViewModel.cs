@@ -17,15 +17,16 @@ namespace OxyPlotCustomProject
                 LineColor = OxyColors.SteelBlue,
                 LineThickness = 1.5,
                 MarkerType = MarkerType.Circle,
-                MarkerFill = OxyColors.White,
-                MarkerSize = 4
+                MarkerFill = OxyColors.Black,
+                MarkerSize = 8 // Use series-level MarkerSize
             };
 
             // Add some sample points with error bars
-            series.Points.Add(new ScatterErrorPoint(0, 0, 0.4, 0.2, 4, 0, null));
-            series.Points.Add(new ScatterErrorPoint(1, 1, 0.3, 0.4, 4, 0, null));
-            series.Points.Add(new ScatterErrorPoint(2, 0.5, 0.2, 0.3, 4, 0, null));
-            series.Points.Add(new ScatterErrorPoint(3, 1.2, 0.5, 0.2, 4, 0, null));
+            // Pass double.NaN for per-point size so the series' MarkerSize is used
+            series.Points.Add(new ScatterErrorPoint(0, 0, 0.4, 0.2, double.NaN, 0, null));
+            series.Points.Add(new ScatterErrorPoint(1, 1, 0.3, 0.4, double.NaN, 0, null));
+            series.Points.Add(new ScatterErrorPoint(2, 0.5, 0.2, 0.3, double.NaN, 0, null));
+            series.Points.Add(new ScatterErrorPoint(3, 1.2, 0.5, 0.2, double.NaN, 0, null));
 
             this.PlotModel.Series.Add(series);
         }
