@@ -12,5 +12,11 @@ namespace OxyPlotCustomProject
             InitializeComponent();
             this.DataContext = new MainViewModel();
         }
+
+        private void OpenParallelCoordinatesPlot_Click(object sender, RoutedEventArgs e)
+        {
+            var parallelCoordinatesWindow = new ParallelCoordinatesWindow();
+            parallelCoordinatesWindow.Show();
+        }
     }
 }
