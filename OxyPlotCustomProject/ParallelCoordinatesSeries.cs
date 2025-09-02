@@ -17,9 +17,19 @@ namespace OxyPlotCustomProject
         public List<ParallelDimension> Dimensions { get; set; }
 
         /// <summary>
-        /// 線の色
+        /// 線の色（単色の場合）
         /// </summary>
         public OxyColor LineColor { get; set; }
+
+        /// <summary>
+        /// 各線の色の値の配列（多色の場合）- カテゴリIDや数値
+        /// </summary>
+        public double[]? ColorValues { get; set; }
+
+        /// <summary>
+        /// カラースケール（色の値から色への変換）
+        /// </summary>
+        public List<ColorScalePoint>? ColorScale { get; set; }
 
         /// <summary>
         /// 線の太さ
@@ -141,8 +151,6 @@ namespace OxyPlotCustomProject
 
         private void RenderDataLines(IRenderContext rc)
         {
-            var color = OxyColor.FromArgb((byte)(LineOpacity * 255), LineColor.R, LineColor.G, LineColor.B);
-            
             // 上下に余白を設ける
             double plotAreaMargin = 30.0;
             double availableHeight = PlotModel.PlotArea.Height - (2 * plotAreaMargin);
@@ -177,16 +185,70 @@ namespace OxyPlotCustomProject
                     screenPoints.Add(new ScreenPoint(x, y));
                 }
 
+                // この線の色を決定
+                OxyColor lineColor = GetLineColor(lineIndex);
+
                 // 線分として描画
                 if (screenPoints.Count > 1)
                 {
                     for (int i = 0; i < screenPoints.Count - 1; i++)
                     {
                         rc.DrawLine(new[] { screenPoints[i], screenPoints[i + 1] }, 
-                            color, LineThickness, EdgeRenderingMode.Automatic);
+                            lineColor, LineThickness, EdgeRenderingMode.Automatic);
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// 指定したライン番号の色を取得します
+        /// </summary>
+        private OxyColor GetLineColor(int lineIndex)
+        {
+            // ColorValuesとColorScaleが設定されている場合は多色
+            if (ColorValues != null && ColorScale != null && lineIndex < ColorValues.Length)
+            {
+                double colorValue = ColorValues[lineIndex];
+                return InterpolateColor(colorValue);
+            }
+
+            // デフォルトは単色（透明度を適用）
+            return OxyColor.FromArgb((byte)(LineOpacity * 255), LineColor.R, LineColor.G, LineColor.B);
+        }
+
+        /// <summary>
+        /// カラースケールから色を補間します
+        /// </summary>
+        private OxyColor InterpolateColor(double value)
+        {
+            if (ColorScale == null || ColorScale.Count == 0)
+                return LineColor;
+
+            // 値がカラースケールの範囲外の場合
+            if (value <= ColorScale[0].Value)
+                return OxyColor.FromArgb((byte)(LineOpacity * 255), ColorScale[0].Color.R, ColorScale[0].Color.G, ColorScale[0].Color.B);
+            if (value >= ColorScale[ColorScale.Count - 1].Value)
+                return OxyColor.FromArgb((byte)(LineOpacity * 255), ColorScale[ColorScale.Count - 1].Color.R, ColorScale[ColorScale.Count - 1].Color.G, ColorScale[ColorScale.Count - 1].Color.B);
+
+            // 値が範囲内の場合、線形補間
+            for (int i = 0; i < ColorScale.Count - 1; i++)
+            {
+                var p1 = ColorScale[i];
+                var p2 = ColorScale[i + 1];
+
+                if (value >= p1.Value && value <= p2.Value)
+                {
+                    double t = (value - p1.Value) / (p2.Value - p1.Value);
+                    
+                    byte r = (byte)(p1.Color.R + t * (p2.Color.R - p1.Color.R));
+                    byte g = (byte)(p1.Color.G + t * (p2.Color.G - p1.Color.G));
+                    byte b = (byte)(p1.Color.B + t * (p2.Color.B - p1.Color.B));
+                    
+                    return OxyColor.FromArgb((byte)(LineOpacity * 255), r, g, b);
+                }
+            }
+
+            return LineColor;
         }
 
         protected override void UpdateData()
@@ -255,6 +317,28 @@ namespace OxyPlotCustomProject
             Label = label;
             Values = values;
             Range = range;
+        }
+    }
+
+    /// <summary>
+    /// カラースケールのポイント
+    /// </summary>
+    public class ColorScalePoint
+    {
+        /// <summary>
+        /// カラースケールの値（0.0-1.0）
+        /// </summary>
+        public double Value { get; set; }
+        
+        /// <summary>
+        /// その値での色
+        /// </summary>
+        public OxyColor Color { get; set; }
+
+        public ColorScalePoint(double value, OxyColor color)
+        {
+            Value = value;
+            Color = color;
         }
     }
 }
