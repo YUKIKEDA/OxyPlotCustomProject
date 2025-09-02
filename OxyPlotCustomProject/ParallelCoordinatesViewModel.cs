@@ -107,5 +107,17 @@ namespace OxyPlotCustomProject
 
             this.PlotModel.Series.Add(series);
         }
+
+        /// <summary>
+        /// ハイライトと選択状態をリセットします
+        /// </summary>
+        public void ResetHighlightAndSelection()
+        {
+            var parallelSeries = this.PlotModel.Series.OfType<ParallelCoordinatesSeries>().FirstOrDefault();
+            if (parallelSeries != null)
+            {
+                parallelSeries.ResetHighlightAndSelection();
+            }
+        }
     }
 }

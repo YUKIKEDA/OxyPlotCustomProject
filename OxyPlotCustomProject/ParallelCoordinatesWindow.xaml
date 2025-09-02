@@ -13,6 +13,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         
@@ -25,9 +26,47 @@
             FontWeight="Bold"
             Text="Parallel Coordinates Plot - Iris Dataset Sample" />
         
+        <!-- コントロール部分 -->
+        <StackPanel 
+            Grid.Row="1"
+            Orientation="Horizontal"
+            HorizontalAlignment="Center"
+            Margin="10,5">
+            
+            <TextBlock
+                Text="Instructions: Hover to highlight, click to select/deselect lines"
+                VerticalAlignment="Center"
+                FontSize="11"
+                Foreground="Gray"
+                Margin="0,0,20,0" />
+                
+            <Button
+                x:Name="resetButton"
+                Content="Reset Selection"
+                Padding="15,8"
+                Background="LightCoral"
+                Foreground="White"
+                FontWeight="Bold"
+                BorderBrush="DarkRed"
+                BorderThickness="1"
+                Click="ResetButton_Click"
+                Cursor="Hand">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="IndianRed" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </StackPanel>
+        
         <!-- PlotView -->
         <oxy:PlotView
-            Grid.Row="1"
+            x:Name="plotView"
+            Grid.Row="2"
             Margin="10"
             Model="{Binding PlotModel}" />
     </Grid>

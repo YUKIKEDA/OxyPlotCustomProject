@@ -52,6 +52,36 @@ namespace OxyPlotCustomProject
         /// </summary>
         public bool ShowAxisLabelsBottom { get; set; }
 
+        /// <summary>
+        /// ハイライトされた線のインデックス（-1は未選択）
+        /// </summary>
+        public int HighlightedLineIndex { get; set; }
+
+        /// <summary>
+        /// 選択された線のインデックスのリスト
+        /// </summary>
+        public HashSet<int> SelectedLineIndices { get; set; }
+
+        /// <summary>
+        /// ハイライト時の線の太さ
+        /// </summary>
+        public double HighlightLineThickness { get; set; }
+
+        /// <summary>
+        /// 選択時の線の太さ
+        /// </summary>
+        public double SelectedLineThickness { get; set; }
+
+        /// <summary>
+        /// ハイライト時の線の透明度
+        /// </summary>
+        public double HighlightLineOpacity { get; set; }
+
+        /// <summary>
+        /// 非選択線の透明度（選択がある場合）
+        /// </summary>
+        public double UnselectedLineOpacity { get; set; }
+
         public ParallelCoordinatesSeries()
         {
             Dimensions = new List<ParallelDimension>();
@@ -60,6 +90,14 @@ namespace OxyPlotCustomProject
             LineOpacity = 0.7;
             ShowAxisLabelsTop = true;
             ShowAxisLabelsBottom = false;
+            
+            // インタラクション関連のデフォルト値
+            HighlightedLineIndex = -1;
+            SelectedLineIndices = new HashSet<int>();
+            HighlightLineThickness = 3.0;
+            SelectedLineThickness = 2.5;
+            HighlightLineOpacity = 1.0;
+            UnselectedLineOpacity = 0.3;
         }
 
         public override void Render(IRenderContext rc)
@@ -185,8 +223,8 @@ namespace OxyPlotCustomProject
                     screenPoints.Add(new ScreenPoint(x, y));
                 }
 
-                // この線の色を決定
-                OxyColor lineColor = GetLineColor(lineIndex);
+                // この線の色と太さを決定
+                var (lineColor, thickness) = GetLineVisualProperties(lineIndex);
 
                 // 線分として描画
                 if (screenPoints.Count > 1)
@@ -194,41 +232,72 @@ namespace OxyPlotCustomProject
                     for (int i = 0; i < screenPoints.Count - 1; i++)
                     {
                         rc.DrawLine(new[] { screenPoints[i], screenPoints[i + 1] }, 
-                            lineColor, LineThickness, EdgeRenderingMode.Automatic);
+                            lineColor, thickness, EdgeRenderingMode.Automatic);
                     }
                 }
             }
         }
 
         /// <summary>
-        /// 指定したライン番号の色を取得します
+        /// 指定したライン番号の視覚的プロパティ（色、太さ）を取得します
         /// </summary>
-        private OxyColor GetLineColor(int lineIndex)
+        private (OxyColor color, double thickness) GetLineVisualProperties(int lineIndex)
+        {
+            var baseColor = GetBaseLineColor(lineIndex);
+            double opacity = LineOpacity;
+            double thickness = LineThickness;
+
+            // ハイライト状態
+            if (lineIndex == HighlightedLineIndex)
+            {
+                opacity = HighlightLineOpacity;
+                thickness = HighlightLineThickness;
+            }
+            // 選択状態
+            else if (SelectedLineIndices.Contains(lineIndex))
+            {
+                opacity = LineOpacity; // 選択された線は通常の透明度
+                thickness = SelectedLineThickness;
+            }
+            // 他の線が選択されている場合、非選択線を薄く表示
+            else if (SelectedLineIndices.Count > 0)
+            {
+                opacity = UnselectedLineOpacity;
+            }
+
+            var finalColor = OxyColor.FromArgb((byte)(opacity * 255), baseColor.R, baseColor.G, baseColor.B);
+            return (finalColor, thickness);
+        }
+
+        /// <summary>
+        /// 指定したライン番号の基本色を取得します
+        /// </summary>
+        private OxyColor GetBaseLineColor(int lineIndex)
         {
             // ColorValuesとColorScaleが設定されている場合は多色
             if (ColorValues != null && ColorScale != null && lineIndex < ColorValues.Length)
             {
                 double colorValue = ColorValues[lineIndex];
-                return InterpolateColor(colorValue);
+                return InterpolateBaseColor(colorValue);
             }
 
-            // デフォルトは単色（透明度を適用）
-            return OxyColor.FromArgb((byte)(LineOpacity * 255), LineColor.R, LineColor.G, LineColor.B);
+            // デフォルトは単色
+            return LineColor;
         }
 
         /// <summary>
-        /// カラースケールから色を補間します
+        /// カラースケールから基本色を補間します
         /// </summary>
-        private OxyColor InterpolateColor(double value)
+        private OxyColor InterpolateBaseColor(double value)
         {
             if (ColorScale == null || ColorScale.Count == 0)
                 return LineColor;
 
             // 値がカラースケールの範囲外の場合
             if (value <= ColorScale[0].Value)
-                return OxyColor.FromArgb((byte)(LineOpacity * 255), ColorScale[0].Color.R, ColorScale[0].Color.G, ColorScale[0].Color.B);
+                return ColorScale[0].Color;
             if (value >= ColorScale[ColorScale.Count - 1].Value)
-                return OxyColor.FromArgb((byte)(LineOpacity * 255), ColorScale[ColorScale.Count - 1].Color.R, ColorScale[ColorScale.Count - 1].Color.G, ColorScale[ColorScale.Count - 1].Color.B);
+                return ColorScale[ColorScale.Count - 1].Color;
 
             // 値が範囲内の場合、線形補間
             for (int i = 0; i < ColorScale.Count - 1; i++)
@@ -244,7 +313,7 @@ namespace OxyPlotCustomProject
                     byte g = (byte)(p1.Color.G + t * (p2.Color.G - p1.Color.G));
                     byte b = (byte)(p1.Color.B + t * (p2.Color.B - p1.Color.B));
                     
-                    return OxyColor.FromArgb((byte)(LineOpacity * 255), r, g, b);
+                    return OxyColor.FromRgb(r, g, b);
                 }
             }
 
@@ -258,8 +327,155 @@ namespace OxyPlotCustomProject
 
         public override TrackerHitResult? GetNearestPoint(ScreenPoint point, bool interpolate)
         {
-            // 最寄りポイントの取得（簡略化）
+            if (Dimensions == null || Dimensions.Count == 0)
+                return null;
+
+            double plotAreaMargin = 30.0;
+            double availableHeight = PlotModel.PlotArea.Height - (2 * plotAreaMargin);
+            double plotBottom = PlotModel.PlotArea.Bottom - plotAreaMargin;
+
+            int valueCount = Dimensions[0].Values.Length;
+            double minDistance = double.MaxValue;
+            int nearestLineIndex = -1;
+
+            // 各線について距離をチェック
+            for (int lineIndex = 0; lineIndex < valueCount; lineIndex++)
+            {
+                var screenPoints = new List<ScreenPoint>();
+
+                // 各次元の値を取得してスクリーン座標に変換
+                for (int dimIndex = 0; dimIndex < Dimensions.Count; dimIndex++)
+                {
+                    var dimension = Dimensions[dimIndex];
+                    
+                    if (lineIndex >= dimension.Values.Length)
+                        break;
+
+                    double value = dimension.Values[lineIndex];
+                    double normalizedValue = (value - dimension.Range[0]) / (dimension.Range[1] - dimension.Range[0]);
+                    
+                    double y = plotBottom - normalizedValue * availableHeight;
+                    double x = XAxis.Transform(dimIndex);
+
+                    screenPoints.Add(new ScreenPoint(x, y));
+                }
+
+                // 線分との距離を計算
+                for (int i = 0; i < screenPoints.Count - 1; i++)
+                {
+                    double distance = DistanceToLineSegment(point, screenPoints[i], screenPoints[i + 1]);
+                    if (distance < minDistance && distance < 20) // 20ピクセル以内（感度向上）
+                    {
+                        minDistance = distance;
+                        nearestLineIndex = lineIndex;
+                    }
+                }
+            }
+
+            if (nearestLineIndex >= 0)
+            {
+                // ハイライト状態を更新
+                var oldHighlight = HighlightedLineIndex;
+                HighlightedLineIndex = nearestLineIndex;
+                
+                // 再描画が必要な場合
+                if (oldHighlight != HighlightedLineIndex)
+                {
+                    PlotModel?.InvalidatePlot(false);
+                }
+
+                return new TrackerHitResult
+                {
+                    Series = this,
+                    DataPoint = new DataPoint(nearestLineIndex, 0),
+                    Position = point,
+                    Item = nearestLineIndex,
+                    Text = $"Line {nearestLineIndex}"
+                };
+            }
+            else
+            {
+                // ハイライトをクリア
+                if (HighlightedLineIndex >= 0)
+                {
+                    HighlightedLineIndex = -1;
+                    PlotModel?.InvalidatePlot(false);
+                }
+            }
+
             return null;
+        }
+
+        /// <summary>
+        /// 点から線分までの距離を計算
+        /// </summary>
+        private double DistanceToLineSegment(ScreenPoint point, ScreenPoint lineStart, ScreenPoint lineEnd)
+        {
+            double dx = lineEnd.X - lineStart.X;
+            double dy = lineEnd.Y - lineStart.Y;
+            
+            if (Math.Abs(dx) < 1e-10 && Math.Abs(dy) < 1e-10)
+            {
+                // 線分が点の場合
+                return Math.Sqrt(Math.Pow(point.X - lineStart.X, 2) + Math.Pow(point.Y - lineStart.Y, 2));
+            }
+
+            double t = Math.Max(0, Math.Min(1, ((point.X - lineStart.X) * dx + (point.Y - lineStart.Y) * dy) / (dx * dx + dy * dy)));
+            
+            double projX = lineStart.X + t * dx;
+            double projY = lineStart.Y + t * dy;
+            
+            return Math.Sqrt(Math.Pow(point.X - projX, 2) + Math.Pow(point.Y - projY, 2));
+        }
+
+        /// <summary>
+        /// マウスクリック時の処理
+        /// </summary>
+        public void HandleMouseDown(ScreenPoint point)
+        {
+            var hitResult = GetNearestPoint(point, false);
+            if (hitResult != null && hitResult.Item is int lineIndex)
+            {
+                // 選択状態をトグル
+                if (SelectedLineIndices.Contains(lineIndex))
+                {
+                    SelectedLineIndices.Remove(lineIndex);
+                }
+                else
+                {
+                    SelectedLineIndices.Add(lineIndex);
+                }
+
+                PlotModel?.InvalidatePlot(false);
+            }
+        }
+
+        /// <summary>
+        /// ハイライトと選択状態をリセットします
+        /// </summary>
+        public void ResetHighlightAndSelection()
+        {
+            bool needsRedraw = false;
+
+            // ハイライトをクリア
+            if (HighlightedLineIndex >= 0)
+            {
+                HighlightedLineIndex = -1;
+                needsRedraw = true;
+            }
+
+            // 選択をクリア
+            if (SelectedLineIndices.Count > 0)
+            {
+                SelectedLineIndices.Clear();
+                needsRedraw = true;
+            }
+
+            // 再描画
+            if (needsRedraw)
+            {
+                PlotModel?.InvalidatePlot(false);
+            }
         }
     }
 
