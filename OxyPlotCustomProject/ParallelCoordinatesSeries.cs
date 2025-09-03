@@ -41,7 +41,6 @@ namespace OxyPlotCustomProject
         /// </summary>
         public double LineOpacity { get; set; }
 
-
         /// <summary>
         /// 軸ラベルを上部に表示するかどうか
         /// </summary>
@@ -82,6 +81,11 @@ namespace OxyPlotCustomProject
         /// </summary>
         public double UnselectedLineOpacity { get; set; }
 
+        /// <summary>
+        /// 軸の目盛り数
+        /// </summary>
+        public int AxisTickCount { get; set; }
+
         public ParallelCoordinatesSeries()
         {
             Dimensions = new List<ParallelDimension>();
@@ -98,6 +102,7 @@ namespace OxyPlotCustomProject
             SelectedLineThickness = 2.5;
             HighlightLineOpacity = 1.0;
             UnselectedLineOpacity = 0.3;
+            AxisTickCount = 5;
         }
 
         public override void Render(IRenderContext rc)
@@ -245,7 +250,7 @@ namespace OxyPlotCustomProject
         private void RenderAxisTicks(IRenderContext rc, int axisIndex, ParallelDimension dimension)
         {
             double x = XAxis.Transform(axisIndex);
-            int tickCount = 5;
+            int tickCount = AxisTickCount;
             
             // 上下に余白を設けるため、プロット領域を少し縮小
             double plotAreaMargin = 30.0;
