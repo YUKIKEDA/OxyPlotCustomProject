@@ -389,41 +389,54 @@ namespace OxyPlotCustomProject
 
                 rc.DrawLine(new[] { topPoint, bottomPoint }, AxisColor, AxisThickness, EdgeRenderingMode.Automatic);
 
-                // 軸のタイトルを上部に描画
-                if (ShowAxisLabelsTop)
-                {
-                    var titleTopPoint = new ScreenPoint(x, PlotModel.PlotArea.Top + PlotAreaMargin - AxisTitleVerticalOffset);
-                    rc.DrawText(
-                        titleTopPoint, 
-                        dimension.Label, 
-                        OxyColors.Black, 
-                        fontFamily: FontFamily, 
-                        fontSize: AxisTitleFontSize, 
-                        fontWeight: OxyPlot.FontWeights.Bold, 
-                        rotation: 0, 
-                        horizontalAlignment: OxyPlot.HorizontalAlignment.Center, 
-                        verticalAlignment: OxyPlot.VerticalAlignment.Bottom
-                    );
-                }
-
-                // 軸のタイトルを下部に描画（オプション）
-                if (ShowAxisLabelsBottom)
-                {
-                    var titleBottomPoint = new ScreenPoint(x, PlotModel.PlotArea.Bottom - PlotAreaMargin + AxisLabelVerticalOffset);
-                    rc.DrawText(
-                        titleBottomPoint, 
-                        dimension.Label, 
-                        OxyColors.Gray, 
-                        fontFamily: FontFamily, 
-                        fontSize: AxisLabelFontSize, 
-                        fontWeight: OxyPlot.FontWeights.Normal, 
-                        rotation: 0, 
-                        horizontalAlignment: OxyPlot.HorizontalAlignment.Center, 
-                        verticalAlignment: OxyPlot.VerticalAlignment.Top);
-                }
+                // 軸のラベルを描画
+                RenderAxisLabels(rc, i, dimension, x);
 
                 // 軸の目盛りを描画
                 RenderAxisTicks(rc, i, dimension);
+            }
+        }
+
+        /// <summary>
+        /// 軸のラベルを描画します
+        /// </summary>
+        /// <param name="rc">レンダリングコンテキスト</param>
+        /// <param name="axisIndex">軸のインデックス</param>
+        /// <param name="dimension">次元情報</param>
+        /// <param name="x">軸のX座標</param>
+        private void RenderAxisLabels(IRenderContext rc, int axisIndex, ParallelDimension dimension, double x)
+        {
+            // 軸のタイトルを上部に描画
+            if (ShowAxisLabelsTop)
+            {
+                var titleTopPoint = new ScreenPoint(x, PlotModel.PlotArea.Top + PlotAreaMargin - AxisTitleVerticalOffset);
+                rc.DrawText(
+                    titleTopPoint, 
+                    dimension.Label, 
+                    OxyColors.Black, 
+                    fontFamily: FontFamily, 
+                    fontSize: AxisTitleFontSize, 
+                    fontWeight: OxyPlot.FontWeights.Bold, 
+                    rotation: 0, 
+                    horizontalAlignment: OxyPlot.HorizontalAlignment.Center, 
+                    verticalAlignment: OxyPlot.VerticalAlignment.Bottom
+                );
+            }
+
+            // 軸のタイトルを下部に描画（オプション）
+            if (ShowAxisLabelsBottom)
+            {
+                var titleBottomPoint = new ScreenPoint(x, PlotModel.PlotArea.Bottom - PlotAreaMargin + AxisLabelVerticalOffset);
+                rc.DrawText(
+                    titleBottomPoint, 
+                    dimension.Label, 
+                    OxyColors.Gray, 
+                    fontFamily: FontFamily, 
+                    fontSize: AxisLabelFontSize, 
+                    fontWeight: OxyPlot.FontWeights.Normal, 
+                    rotation: 0, 
+                    horizontalAlignment: OxyPlot.HorizontalAlignment.Center, 
+                    verticalAlignment: OxyPlot.VerticalAlignment.Top);
             }
         }
 
