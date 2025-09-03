@@ -769,73 +769,6 @@ namespace OxyPlotCustomProject
         }
 
         /// <summary>
-        /// 点から線分までの距離を計算します
-        /// </summary>
-        /// <param name="point">点の座標</param>
-        /// <param name="lineStart">線分の開始点</param>
-        /// <param name="lineEnd">線分の終了点</param>
-        /// <returns>点から線分までの最短距離</returns>
-        private double DistanceToLineSegment(ScreenPoint point, ScreenPoint lineStart, ScreenPoint lineEnd)
-        {
-            double dx = lineEnd.X - lineStart.X;
-            double dy = lineEnd.Y - lineStart.Y;
-            
-            if (Math.Abs(dx) < 1e-10 && Math.Abs(dy) < 1e-10)
-            {
-                // 線分が点の場合
-                return Math.Sqrt(Math.Pow(point.X - lineStart.X, 2) + Math.Pow(point.Y - lineStart.Y, 2));
-            }
-
-            double t = Math.Max(0, Math.Min(1, ((point.X - lineStart.X) * dx + (point.Y - lineStart.Y) * dy) / (dx * dx + dy * dy)));
-            
-            double projX = lineStart.X + t * dx;
-            double projY = lineStart.Y + t * dy;
-            
-            return Math.Sqrt(Math.Pow(point.X - projX, 2) + Math.Pow(point.Y - projY, 2));
-        }
-
-        /// <summary>
-        /// マウスクリック時の処理を行います
-        /// </summary>
-        /// <param name="point">クリックされたスクリーン座標</param>
-        public void HandleMouseDown(ScreenPoint point)
-        {
-            var lineIndex = FindNearestLineIndex(point);
-            if (lineIndex >= 0)
-            {
-                // 選択状態を設定（同じ線をクリックした場合は選択解除）
-                if (SelectedLineIndex == lineIndex)
-                {
-                    SelectedLineIndex = -1;
-                    FixedTooltipInfo = null;
-                }
-                else
-                {
-                    SelectedLineIndex = lineIndex;
-                    // 固定ツールチップを設定
-                    FixedTooltipInfo = new FixedTooltip
-                    {
-                        Position = point,
-                        LineIndex = lineIndex,
-                        Text = CreateTooltipText(lineIndex)
-                    };
-                }
-
-                PlotModel?.InvalidatePlot(false);
-            }
-            else
-            {
-                // クリックした場所に線がない場合は選択と固定ツールチップをクリア
-                if (SelectedLineIndex >= 0 || FixedTooltipInfo != null)
-                {
-                    SelectedLineIndex = -1;
-                    FixedTooltipInfo = null;
-                    PlotModel?.InvalidatePlot(false);
-                }
-            }
-        }
-
-        /// <summary>
         /// 指定した点に最も近い線のインデックスを検索します
         /// </summary>
         /// <param name="point">スクリーン座標の点</param>
@@ -892,6 +825,74 @@ namespace OxyPlotCustomProject
             }
 
             return nearestLineIndex;
+        }
+
+        /// <summary>
+        /// 点から線分までの距離を計算します
+        /// </summary>
+        /// <param name="point">点の座標</param>
+        /// <param name="lineStart">線分の開始点</param>
+        /// <param name="lineEnd">線分の終了点</param>
+        /// <returns>点から線分までの最短距離</returns>
+        private double DistanceToLineSegment(ScreenPoint point, ScreenPoint lineStart, ScreenPoint lineEnd)
+        {
+            double dx = lineEnd.X - lineStart.X;
+            double dy = lineEnd.Y - lineStart.Y;
+            
+            if (Math.Abs(dx) < 1e-10 && Math.Abs(dy) < 1e-10)
+            {
+                // 線分が点の場合
+                return Math.Sqrt(Math.Pow(point.X - lineStart.X, 2) + Math.Pow(point.Y - lineStart.Y, 2));
+            }
+
+            double t = Math.Max(0, Math.Min(1, ((point.X - lineStart.X) * dx + (point.Y - lineStart.Y) * dy) / (dx * dx + dy * dy)));
+            
+            double projX = lineStart.X + t * dx;
+            double projY = lineStart.Y + t * dy;
+            
+            return Math.Sqrt(Math.Pow(point.X - projX, 2) + Math.Pow(point.Y - projY, 2));
+        }
+
+        
+        /// <summary>
+        /// マウスクリック時の処理を行います
+        /// </summary>
+        /// <param name="point">クリックされたスクリーン座標</param>
+        public void HandleMouseDown(ScreenPoint point)
+        {
+            var lineIndex = FindNearestLineIndex(point);
+            if (lineIndex >= 0)
+            {
+                // 選択状態を設定（同じ線をクリックした場合は選択解除）
+                if (SelectedLineIndex == lineIndex)
+                {
+                    SelectedLineIndex = -1;
+                    FixedTooltipInfo = null;
+                }
+                else
+                {
+                    SelectedLineIndex = lineIndex;
+                    // 固定ツールチップを設定
+                    FixedTooltipInfo = new FixedTooltip
+                    {
+                        Position = point,
+                        LineIndex = lineIndex,
+                        Text = CreateTooltipText(lineIndex)
+                    };
+                }
+
+                PlotModel?.InvalidatePlot(false);
+            }
+            else
+            {
+                // クリックした場所に線がない場合は選択と固定ツールチップをクリア
+                if (SelectedLineIndex >= 0 || FixedTooltipInfo != null)
+                {
+                    SelectedLineIndex = -1;
+                    FixedTooltipInfo = null;
+                    PlotModel?.InvalidatePlot(false);
+                }
+            }
         }
 
         /// <summary>
