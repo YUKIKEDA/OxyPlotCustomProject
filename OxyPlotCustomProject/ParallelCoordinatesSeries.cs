@@ -619,14 +619,54 @@ namespace OxyPlotCustomProject
             double tooltipWidth = maxWidth + 2 * padding;
             double tooltipHeight = lines.Length * lineHeight + 2 * padding;
 
-            // ツールチップの位置を調整（画面外に出ないように）
-            double x = FixedTooltipInfo.Position.X + 10;
-            double y = FixedTooltipInfo.Position.Y - tooltipHeight - 10;
-
-            if (x + tooltipWidth > PlotModel.PlotArea.Right)
-                x = FixedTooltipInfo.Position.X - tooltipWidth - 10;
-            if (y < PlotModel.PlotArea.Top)
-                y = FixedTooltipInfo.Position.Y + 20;
+            // ツールチップの位置を調整（軸と重ならないように）
+            double clickX = FixedTooltipInfo.Position.X;
+            double clickY = FixedTooltipInfo.Position.Y;
+            
+            // 軸の位置を避けるため、軸間の中央付近に配置を試みる
+            double bestX = clickX + 15;
+            double bestY = clickY - tooltipHeight - 15;
+            
+            // 各軸の位置をチェックして、軸から離れた位置を選択
+            double minDistanceFromAxis = double.MaxValue;
+            for (int dimIndex = 0; dimIndex < Dimensions.Count; dimIndex++)
+            {
+                double axisX = XAxis.Transform(dimIndex);
+                double distance = Math.Abs(bestX + tooltipWidth / 2 - axisX);
+                
+                // 軸に近すぎる場合は位置を調整
+                if (distance < tooltipWidth / 2 + 10)
+                {
+                    if (dimIndex < Dimensions.Count - 1)
+                    {
+                        // 次の軸との中間点に移動
+                        double nextAxisX = XAxis.Transform(dimIndex + 1);
+                        bestX = (axisX + nextAxisX - tooltipWidth) / 2;
+                    }
+                    else if (dimIndex > 0)
+                    {
+                        // 前の軸との中間点に移動
+                        double prevAxisX = XAxis.Transform(dimIndex - 1);
+                        bestX = (prevAxisX + axisX - tooltipWidth) / 2;
+                    }
+                }
+                
+                minDistanceFromAxis = Math.Min(minDistanceFromAxis, distance);
+            }
+            
+            // 画面外に出ないように最終調整
+            if (bestX + tooltipWidth > PlotModel.PlotArea.Right)
+                bestX = PlotModel.PlotArea.Right - tooltipWidth - 5;
+            if (bestX < PlotModel.PlotArea.Left)
+                bestX = PlotModel.PlotArea.Left + 5;
+                
+            if (bestY < PlotModel.PlotArea.Top)
+                bestY = clickY + 20;
+            if (bestY + tooltipHeight > PlotModel.PlotArea.Bottom)
+                bestY = PlotModel.PlotArea.Bottom - tooltipHeight - 5;
+            
+            double x = bestX;
+            double y = bestY;
 
             // 背景を描画
             var backgroundRect = new OxyRect(x, y, tooltipWidth, tooltipHeight);
