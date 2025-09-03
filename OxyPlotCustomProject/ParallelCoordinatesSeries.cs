@@ -452,7 +452,6 @@ namespace OxyPlotCustomProject
             double availableWidth = PlotModel.PlotArea.Width - (2 * HorizontalMargin);
             // 指定された軸のX座標を計算（軸間隔を等分に配置）
             double x = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * axisIndex / (Dimensions.Count - 1));
-            int tickCount = AxisTickCount;
             
             // 垂直方向の利用可能な高さを計算（上下の余白を除く）
             double availableHeight = PlotModel.PlotArea.Height - (2 * PlotAreaMargin);
@@ -460,10 +459,10 @@ namespace OxyPlotCustomProject
             double plotTop = PlotModel.PlotArea.Top + PlotAreaMargin;
             double plotBottom = PlotModel.PlotArea.Bottom - PlotAreaMargin;
             
-            for (int t = 0; t <= tickCount; t++)
+            for (int t = 0; t <= AxisTickCount; t++)
             {
                 // 目盛りの値を計算（最小値から最大値まで等間隔で分割）
-                double value = dimension.Range[0] + (dimension.Range[1] - dimension.Range[0]) * t / tickCount;
+                double value = dimension.Range[0] + (dimension.Range[1] - dimension.Range[0]) * t / AxisTickCount;
                 // 値を0-1の範囲に正規化（最小値=0, 最大値=1）
                 double normalizedValue = (value - dimension.Range[0]) / (dimension.Range[1] - dimension.Range[0]);
                 // 正規化された値をY座標に変換（下から上に向かって配置）
