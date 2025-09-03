@@ -410,6 +410,7 @@ namespace OxyPlotCustomProject
             if (ShowAxisLabelsTop)
             {
                 var titleTopPoint = new ScreenPoint(x, PlotModel.PlotArea.Top + PlotAreaMargin - AxisTitleVerticalOffset);
+                // TODO 色やアライメントを設定できるようにする
                 rc.DrawText(
                     titleTopPoint, 
                     dimension.Label, 
@@ -427,6 +428,7 @@ namespace OxyPlotCustomProject
             if (ShowAxisLabelsBottom)
             {
                 var titleBottomPoint = new ScreenPoint(x, PlotModel.PlotArea.Bottom - PlotAreaMargin + AxisLabelVerticalOffset);
+                // TODO 色やアライメントを設定できるようにする
                 rc.DrawText(
                     titleBottomPoint, 
                     dimension.Label, 
@@ -480,6 +482,7 @@ namespace OxyPlotCustomProject
                     EdgeRenderingMode.Automatic
                 );
 
+                // TODO 色やアライメントを設定できるようにする
                 // 目盛りラベル
                 rc.DrawText(
                     new ScreenPoint(x + TickLabelHorizontalOffset, y), 
@@ -510,6 +513,7 @@ namespace OxyPlotCustomProject
                 return;
             }
 
+            // TODO 各次元のデータ数が異なる場合のハンドリングを考える
             // 各次元の値の数を取得（すべて同じ数でなければならない）
             int valueCount = Dimensions[0].Values.Length;
             
@@ -654,6 +658,113 @@ namespace OxyPlotCustomProject
             }
 
             return LineColor;
+        }
+
+        /// <summary>
+        /// 固定ツールチップを描画します
+        /// </summary>
+        /// <param name="rc">レンダリングコンテキスト</param>
+        private void RenderFixedTooltip(IRenderContext rc)
+        {
+            if (FixedTooltipInfo == null)
+            {
+                return;
+            }
+
+            var lines = FixedTooltipInfo.Text.Split('\n');
+            double lineHeight = TooltipLineHeight;
+            double padding = TooltipPadding;
+            double fontSize = TooltipFontSize;
+
+            // ツールチップのサイズを計算
+            double maxWidth = 0;
+            foreach (var line in lines)
+            {
+                var size = rc.MeasureText(line, FontFamily, fontSize, OxyPlot.FontWeights.Normal);
+                maxWidth = Math.Max(maxWidth, size.Width);
+            }
+
+            double tooltipWidth = maxWidth + 2 * padding;
+            double tooltipHeight = lines.Length * lineHeight + 2 * padding;
+
+            // ツールチップの位置を調整（軸と重ならないように）
+            double clickX = FixedTooltipInfo.Position.X;
+            double clickY = FixedTooltipInfo.Position.Y;
+            
+            // 軸の位置を避けるため、軸間の中央付近に配置を試みる
+            double bestX = clickX + TooltipOffset;
+            double bestY = clickY - tooltipHeight - TooltipOffset;
+            
+            // 各軸の位置をチェックして、軸から離れた位置を選択
+            double minDistanceFromAxis = double.MaxValue;
+            for (int dimIndex = 0; dimIndex < Dimensions.Count; dimIndex++)
+            {
+                double availableWidth = PlotModel.PlotArea.Width - (2 * HorizontalMargin);
+                double axisX = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * dimIndex / (Dimensions.Count - 1));
+                double distance = Math.Abs(bestX + tooltipWidth / 2 - axisX);
+                
+                // 軸に近すぎる場合は位置を調整
+                if (distance < tooltipWidth / 2 + TickLabelHorizontalOffset)
+                {
+                    if (dimIndex < Dimensions.Count - 1)
+                    {
+                        // 次の軸との中間点に移動
+                        double nextAxisX = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * (dimIndex + 1) / (Dimensions.Count - 1));
+                        bestX = (axisX + nextAxisX - tooltipWidth) / 2;
+                    }
+                    else if (dimIndex > 0)
+                    {
+                        // 前の軸との中間点に移動
+                        double prevAxisX = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * (dimIndex - 1) / (Dimensions.Count - 1));
+                        bestX = (prevAxisX + axisX - tooltipWidth) / 2;
+                    }
+                }
+                
+                minDistanceFromAxis = Math.Min(minDistanceFromAxis, distance);
+            }
+            
+            // 画面外に出ないように最終調整
+            if (bestX + tooltipWidth > PlotModel.PlotArea.Right)
+            {
+                bestX = PlotModel.PlotArea.Right - tooltipWidth - TickLength;
+            }
+            if (bestX < PlotModel.PlotArea.Left)
+            {
+                bestX = PlotModel.PlotArea.Left + TickLength;
+            }
+                
+            if (bestY < PlotModel.PlotArea.Top)
+            {
+                bestY = clickY + TooltipOffset;
+            }
+            if (bestY + tooltipHeight > PlotModel.PlotArea.Bottom)
+            {
+                bestY = PlotModel.PlotArea.Bottom - tooltipHeight - TickLength;
+            }
+            
+            double x = bestX;
+            double y = bestY;
+
+            // 背景を描画
+            var backgroundRect = new OxyRect(x, y, tooltipWidth, tooltipHeight);
+            rc.DrawRectangle(backgroundRect, OxyColor.FromArgb(240, 255, 255, 255), OxyColors.Gray, 1, EdgeRenderingMode.Automatic);
+
+            // テキストを描画
+            for (int i = 0; i < lines.Length; i++)
+            {
+                var textPosition = new ScreenPoint(x + padding, y + padding + i * lineHeight);
+                rc.DrawText(
+                    textPosition, 
+                    lines[i], 
+                    OxyColors.Black, 
+                    FontFamily, 
+                    fontSize, 
+                    OxyPlot.FontWeights.Normal, 
+                    0, 
+                    OxyPlot.HorizontalAlignment.Left, 
+                    OxyPlot.VerticalAlignment.Top
+                );
+            }
         }
 
         /// <summary>
@@ -852,113 +963,6 @@ namespace OxyPlotCustomProject
             }
 
             return string.Join("\n", tooltipLines);
-        }
-
-        /// <summary>
-        /// 固定ツールチップを描画します
-        /// </summary>
-        /// <param name="rc">レンダリングコンテキスト</param>
-        private void RenderFixedTooltip(IRenderContext rc)
-        {
-            if (FixedTooltipInfo == null)
-            {
-                return;
-            }
-
-            var lines = FixedTooltipInfo.Text.Split('\n');
-            double lineHeight = TooltipLineHeight;
-            double padding = TooltipPadding;
-            double fontSize = TooltipFontSize;
-
-            // ツールチップのサイズを計算
-            double maxWidth = 0;
-            foreach (var line in lines)
-            {
-                var size = rc.MeasureText(line, FontFamily, fontSize, OxyPlot.FontWeights.Normal);
-                maxWidth = Math.Max(maxWidth, size.Width);
-            }
-
-            double tooltipWidth = maxWidth + 2 * padding;
-            double tooltipHeight = lines.Length * lineHeight + 2 * padding;
-
-            // ツールチップの位置を調整（軸と重ならないように）
-            double clickX = FixedTooltipInfo.Position.X;
-            double clickY = FixedTooltipInfo.Position.Y;
-            
-            // 軸の位置を避けるため、軸間の中央付近に配置を試みる
-            double bestX = clickX + TooltipOffset;
-            double bestY = clickY - tooltipHeight - TooltipOffset;
-            
-            // 各軸の位置をチェックして、軸から離れた位置を選択
-            double minDistanceFromAxis = double.MaxValue;
-            for (int dimIndex = 0; dimIndex < Dimensions.Count; dimIndex++)
-            {
-                double availableWidth = PlotModel.PlotArea.Width - (2 * HorizontalMargin);
-                double axisX = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * dimIndex / (Dimensions.Count - 1));
-                double distance = Math.Abs(bestX + tooltipWidth / 2 - axisX);
-                
-                // 軸に近すぎる場合は位置を調整
-                if (distance < tooltipWidth / 2 + TickLabelHorizontalOffset)
-                {
-                    if (dimIndex < Dimensions.Count - 1)
-                    {
-                        // 次の軸との中間点に移動
-                        double nextAxisX = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * (dimIndex + 1) / (Dimensions.Count - 1));
-                        bestX = (axisX + nextAxisX - tooltipWidth) / 2;
-                    }
-                    else if (dimIndex > 0)
-                    {
-                        // 前の軸との中間点に移動
-                        double prevAxisX = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * (dimIndex - 1) / (Dimensions.Count - 1));
-                        bestX = (prevAxisX + axisX - tooltipWidth) / 2;
-                    }
-                }
-                
-                minDistanceFromAxis = Math.Min(minDistanceFromAxis, distance);
-            }
-            
-            // 画面外に出ないように最終調整
-            if (bestX + tooltipWidth > PlotModel.PlotArea.Right)
-            {
-                bestX = PlotModel.PlotArea.Right - tooltipWidth - TickLength;
-            }
-            if (bestX < PlotModel.PlotArea.Left)
-            {
-                bestX = PlotModel.PlotArea.Left + TickLength;
-            }
-                
-            if (bestY < PlotModel.PlotArea.Top)
-            {
-                bestY = clickY + TooltipOffset;
-            }
-            if (bestY + tooltipHeight > PlotModel.PlotArea.Bottom)
-            {
-                bestY = PlotModel.PlotArea.Bottom - tooltipHeight - TickLength;
-            }
-            
-            double x = bestX;
-            double y = bestY;
-
-            // 背景を描画
-            var backgroundRect = new OxyRect(x, y, tooltipWidth, tooltipHeight);
-            rc.DrawRectangle(backgroundRect, OxyColor.FromArgb(240, 255, 255, 255), OxyColors.Gray, 1, EdgeRenderingMode.Automatic);
-
-            // テキストを描画
-            for (int i = 0; i < lines.Length; i++)
-            {
-                var textPosition = new ScreenPoint(x + padding, y + padding + i * lineHeight);
-                rc.DrawText(
-                    textPosition, 
-                    lines[i], 
-                    OxyColors.Black, 
-                    FontFamily, 
-                    fontSize, 
-                    OxyPlot.FontWeights.Normal, 
-                    0, 
-                    OxyPlot.HorizontalAlignment.Left, 
-                    OxyPlot.VerticalAlignment.Top
-                );
-            }
         }
     }
 
