@@ -57,9 +57,9 @@ namespace OxyPlotCustomProject
         public int HighlightedLineIndex { get; set; }
 
         /// <summary>
-        /// 選択された線のインデックスのリスト
+        /// 選択された線のインデックス（-1は未選択）
         /// </summary>
-        public HashSet<int> SelectedLineIndices { get; set; }
+        public int SelectedLineIndex { get; set; }
 
         /// <summary>
         /// ハイライト時の線の太さ
@@ -86,6 +86,11 @@ namespace OxyPlotCustomProject
         /// </summary>
         public int AxisTickCount { get; set; }
 
+        /// <summary>
+        /// 固定表示中のツールチップ情報
+        /// </summary>
+        public FixedTooltip? FixedTooltipInfo { get; set; }
+
         public ParallelCoordinatesSeries()
         {
             Dimensions = new List<ParallelDimension>();
@@ -97,7 +102,7 @@ namespace OxyPlotCustomProject
             
             // インタラクション関連のデフォルト値
             HighlightedLineIndex = -1;
-            SelectedLineIndices = new HashSet<int>();
+            SelectedLineIndex = -1;
             HighlightLineThickness = 3.0;
             SelectedLineThickness = 2.5;
             HighlightLineOpacity = 1.0;
@@ -115,6 +120,9 @@ namespace OxyPlotCustomProject
 
             // データ線の描画
             RenderDataLines(rc);
+
+            // 固定ツールチップの描画
+            RenderFixedTooltip(rc);
         }
 
         protected override void UpdateData()
@@ -124,6 +132,7 @@ namespace OxyPlotCustomProject
 
         public override TrackerHitResult? GetNearestPoint(ScreenPoint point, bool interpolate)
         {
+            // 元のトラッカー機能は無効にして、ハイライト機能のみ残す
             if (Dimensions == null || Dimensions.Count == 0)
                 return null;
 
@@ -181,13 +190,14 @@ namespace OxyPlotCustomProject
                     PlotModel?.InvalidatePlot(false);
                 }
 
+                // TrackerHitResultは返すが、Textを空にしてツールチップを表示しない
                 return new TrackerHitResult
                 {
                     Series = this,
                     DataPoint = new DataPoint(nearestLineIndex, 0),
                     Position = point,
                     Item = nearestLineIndex,
-                    Text = $"Line {nearestLineIndex}"
+                    Text = string.Empty // 空のテキストでツールチップを無効化
                 };
             }
             else
@@ -345,13 +355,13 @@ namespace OxyPlotCustomProject
                 thickness = HighlightLineThickness;
             }
             // 選択状態
-            else if (SelectedLineIndices.Contains(lineIndex))
+            else if (lineIndex == SelectedLineIndex)
             {
                 opacity = LineOpacity; // 選択された線は通常の透明度
                 thickness = SelectedLineThickness;
             }
             // 他の線が選択されている場合、非選択線を薄く表示
-            else if (SelectedLineIndices.Count > 0)
+            else if (SelectedLineIndex >= 0)
             {
                 opacity = UnselectedLineOpacity;
             }
@@ -441,17 +451,35 @@ namespace OxyPlotCustomProject
             var hitResult = GetNearestPoint(point, false);
             if (hitResult != null && hitResult.Item is int lineIndex)
             {
-                // 選択状態をトグル
-                if (SelectedLineIndices.Contains(lineIndex))
+                // 選択状態を設定（同じ線をクリックした場合は選択解除）
+                if (SelectedLineIndex == lineIndex)
                 {
-                    SelectedLineIndices.Remove(lineIndex);
+                    SelectedLineIndex = -1;
+                    FixedTooltipInfo = null;
                 }
                 else
                 {
-                    SelectedLineIndices.Add(lineIndex);
+                    SelectedLineIndex = lineIndex;
+                    // 固定ツールチップを設定
+                    FixedTooltipInfo = new FixedTooltip
+                    {
+                        Position = point,
+                        LineIndex = lineIndex,
+                        Text = CreateTooltipText(lineIndex)
+                    };
                 }
 
                 PlotModel?.InvalidatePlot(false);
+            }
+            else
+            {
+                // クリックした場所に線がない場合は選択と固定ツールチップをクリア
+                if (SelectedLineIndex >= 0 || FixedTooltipInfo != null)
+                {
+                    SelectedLineIndex = -1;
+                    FixedTooltipInfo = null;
+                    PlotModel?.InvalidatePlot(false);
+                }
             }
         }
 
@@ -470,9 +498,16 @@ namespace OxyPlotCustomProject
             }
 
             // 選択をクリア
-            if (SelectedLineIndices.Count > 0)
+            if (SelectedLineIndex >= 0)
             {
-                SelectedLineIndices.Clear();
+                SelectedLineIndex = -1;
+                needsRedraw = true;
+            }
+
+            // 固定ツールチップもクリア
+            if (FixedTooltipInfo != null)
+            {
+                FixedTooltipInfo = null;
                 needsRedraw = true;
             }
 
@@ -482,6 +517,107 @@ namespace OxyPlotCustomProject
                 PlotModel?.InvalidatePlot(false);
             }
         }
+
+        /// <summary>
+        /// 指定した線のインデックスに対してツールチップテキストを作成します
+        /// </summary>
+        private string CreateTooltipText(int lineIndex)
+        {
+            if (Dimensions == null || Dimensions.Count == 0 || lineIndex < 0)
+                return $"Line {lineIndex}";
+
+            var tooltipLines = new List<string>();
+            tooltipLines.Add($"Data Point {lineIndex}");
+            tooltipLines.Add(""); // 空行
+
+            // 各次元の値を表示
+            for (int dimIndex = 0; dimIndex < Dimensions.Count; dimIndex++)
+            {
+                var dimension = Dimensions[dimIndex];
+                if (lineIndex < dimension.Values.Length)
+                {
+                    double value = dimension.Values[lineIndex];
+                    tooltipLines.Add($"{dimension.Label}: {value:F2}");
+                }
+            }
+
+            // カラー値がある場合は表示
+            if (ColorValues != null && lineIndex < ColorValues.Length)
+            {
+                tooltipLines.Add(""); // 空行
+                tooltipLines.Add($"Color Value: {ColorValues[lineIndex]:F2}");
+            }
+
+            return string.Join("\n", tooltipLines);
+        }
+
+        /// <summary>
+        /// 固定ツールチップを描画します
+        /// </summary>
+        private void RenderFixedTooltip(IRenderContext rc)
+        {
+            if (FixedTooltipInfo == null)
+                return;
+
+            var lines = FixedTooltipInfo.Text.Split('\n');
+            double lineHeight = 16;
+            double padding = 8;
+            double fontSize = 11;
+
+            // ツールチップのサイズを計算
+            double maxWidth = 0;
+            foreach (var line in lines)
+            {
+                var size = rc.MeasureText(line, "Arial", fontSize, OxyPlot.FontWeights.Normal);
+                maxWidth = Math.Max(maxWidth, size.Width);
+            }
+
+            double tooltipWidth = maxWidth + 2 * padding;
+            double tooltipHeight = lines.Length * lineHeight + 2 * padding;
+
+            // ツールチップの位置を調整（画面外に出ないように）
+            double x = FixedTooltipInfo.Position.X + 10;
+            double y = FixedTooltipInfo.Position.Y - tooltipHeight - 10;
+
+            if (x + tooltipWidth > PlotModel.PlotArea.Right)
+                x = FixedTooltipInfo.Position.X - tooltipWidth - 10;
+            if (y < PlotModel.PlotArea.Top)
+                y = FixedTooltipInfo.Position.Y + 20;
+
+            // 背景を描画
+            var backgroundRect = new OxyRect(x, y, tooltipWidth, tooltipHeight);
+            rc.DrawRectangle(backgroundRect, OxyColor.FromArgb(240, 255, 255, 255), OxyColors.Gray, 1, EdgeRenderingMode.Automatic);
+
+            // テキストを描画
+            for (int i = 0; i < lines.Length; i++)
+            {
+                var textPosition = new ScreenPoint(x + padding, y + padding + i * lineHeight);
+                rc.DrawText(textPosition, lines[i], OxyColors.Black, "Arial", fontSize, 
+                    OxyPlot.FontWeights.Normal, 0, OxyPlot.HorizontalAlignment.Left, 
+                    OxyPlot.VerticalAlignment.Top);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 固定ツールチップの情報
+    /// </summary>
+    public class FixedTooltip
+    {
+        /// <summary>
+        /// ツールチップの表示位置
+        /// </summary>
+        public ScreenPoint Position { get; set; }
+
+        /// <summary>
+        /// 対象の線のインデックス
+        /// </summary>
+        public int LineIndex { get; set; }
+
+        /// <summary>
+        /// 表示するテキスト
+        /// </summary>
+        public string Text { get; set; } = string.Empty;
     }
 
     /// <summary>
