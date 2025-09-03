@@ -9,7 +9,7 @@ namespace OxyPlotCustomProject
     /// <summary>
     /// Parallel Coordinates Plot専用のカスタムシリーズ
     /// </summary>
-    public class ParallelCoordinatesSeries : XYAxisSeries
+    public class ParallelCoordinatesSeries : ItemsSeries
     {
         /// <summary>
         /// 次元（軸）のリスト - 各軸に値の配列を持つ
@@ -161,7 +161,9 @@ namespace OxyPlotCustomProject
                     double normalizedValue = (value - dimension.Range[0]) / (dimension.Range[1] - dimension.Range[0]);
                     
                     double y = plotBottom - normalizedValue * availableHeight;
-                    double x = XAxis.Transform(dimIndex);
+                    double horizontalMargin = 40.0;
+                    double availableWidth = PlotModel.PlotArea.Width - (2 * horizontalMargin);
+                    double x = PlotModel.PlotArea.Left + horizontalMargin + (availableWidth * dimIndex / (Dimensions.Count - 1));
 
                     screenPoints.Add(new ScreenPoint(x, y));
                 }
@@ -215,7 +217,9 @@ namespace OxyPlotCustomProject
             for (int i = 0; i < Dimensions.Count; i++)
             {
                 var dimension = Dimensions[i];
-                double x = XAxis.Transform(i);
+                double horizontalMargin = 40.0;
+                double availableWidth = PlotModel.PlotArea.Width - (2 * horizontalMargin);
+                double x = PlotModel.PlotArea.Left + horizontalMargin + (availableWidth * i / (Dimensions.Count - 1));
 
                 // 軸の垂直線を描画（余白を考慮）
                 var topPoint = new ScreenPoint(x, PlotModel.PlotArea.Top + plotAreaMargin);
@@ -250,7 +254,9 @@ namespace OxyPlotCustomProject
 
         private void RenderAxisTicks(IRenderContext rc, int axisIndex, ParallelDimension dimension)
         {
-            double x = XAxis.Transform(axisIndex);
+            double horizontalMargin = 40.0;
+            double availableWidth = PlotModel.PlotArea.Width - (2 * horizontalMargin);
+            double x = PlotModel.PlotArea.Left + horizontalMargin + (availableWidth * axisIndex / (Dimensions.Count - 1));
             int tickCount = AxisTickCount;
             
             // 上下に余白を設けるため、プロット領域を少し縮小
@@ -310,7 +316,9 @@ namespace OxyPlotCustomProject
                     
                     // Y座標を画面座標に変換（余白を考慮）
                     double y = plotBottom - normalizedValue * availableHeight;
-                    double x = XAxis.Transform(dimIndex);
+                    double horizontalMargin = 40.0;
+                    double availableWidth = PlotModel.PlotArea.Width - (2 * horizontalMargin);
+                    double x = PlotModel.PlotArea.Left + horizontalMargin + (availableWidth * dimIndex / (Dimensions.Count - 1));
 
                     screenPoints.Add(new ScreenPoint(x, y));
                 }
@@ -507,7 +515,9 @@ namespace OxyPlotCustomProject
                     double normalizedValue = (value - dimension.Range[0]) / (dimension.Range[1] - dimension.Range[0]);
                     
                     double y = plotBottom - normalizedValue * availableHeight;
-                    double x = XAxis.Transform(dimIndex);
+                    double horizontalMargin = 40.0;
+                    double availableWidth = PlotModel.PlotArea.Width - (2 * horizontalMargin);
+                    double x = PlotModel.PlotArea.Left + horizontalMargin + (availableWidth * dimIndex / (Dimensions.Count - 1));
 
                     screenPoints.Add(new ScreenPoint(x, y));
                 }
@@ -595,6 +605,22 @@ namespace OxyPlotCustomProject
             return string.Join("\n", tooltipLines);
         }
 
+        protected override bool AreAxesRequired() => false;
+        protected override void EnsureAxes() { }
+        protected override bool IsUsing(OxyPlot.Axes.Axis axis) => false;
+        protected override void UpdateAxisMaxMin() { }
+        protected override void UpdateMaxMin() { }
+        protected override void SetDefaultValues() { }
+
+        /// <summary>
+        /// 凡例シンボルを描画します
+        /// </summary>
+        /// <param name="rc">レンダリングコンテキスト</param>
+        /// <param name="legendBox">凡例の矩形</param>
+        public override void RenderLegend(IRenderContext rc, OxyRect legendBox)
+        {
+        }
+
         /// <summary>
         /// 固定ツールチップを描画します
         /// </summary>
@@ -631,7 +657,9 @@ namespace OxyPlotCustomProject
             double minDistanceFromAxis = double.MaxValue;
             for (int dimIndex = 0; dimIndex < Dimensions.Count; dimIndex++)
             {
-                double axisX = XAxis.Transform(dimIndex);
+                double horizontalMargin = 40.0;
+                double availableWidth = PlotModel.PlotArea.Width - (2 * horizontalMargin);
+                double axisX = PlotModel.PlotArea.Left + horizontalMargin + (availableWidth * dimIndex / (Dimensions.Count - 1));
                 double distance = Math.Abs(bestX + tooltipWidth / 2 - axisX);
                 
                 // 軸に近すぎる場合は位置を調整
@@ -640,13 +668,13 @@ namespace OxyPlotCustomProject
                     if (dimIndex < Dimensions.Count - 1)
                     {
                         // 次の軸との中間点に移動
-                        double nextAxisX = XAxis.Transform(dimIndex + 1);
+                        double nextAxisX = PlotModel.PlotArea.Left + horizontalMargin + (availableWidth * (dimIndex + 1) / (Dimensions.Count - 1));
                         bestX = (axisX + nextAxisX - tooltipWidth) / 2;
                     }
                     else if (dimIndex > 0)
                     {
                         // 前の軸との中間点に移動
-                        double prevAxisX = XAxis.Transform(dimIndex - 1);
+                        double prevAxisX = PlotModel.PlotArea.Left + horizontalMargin + (availableWidth * (dimIndex - 1) / (Dimensions.Count - 1));
                         bestX = (prevAxisX + axisX - tooltipWidth) / 2;
                     }
                 }

@@ -14,23 +14,6 @@ namespace OxyPlotCustomProject
         {
             this.PlotModel = new PlotModel { Title = "Parallel Coordinates Plot Demo" };
 
-            // 軸を非表示にする（カスタムシリーズで描画）
-            this.PlotModel.Axes.Add(new OxyPlot.Axes.LinearAxis
-            {
-                Position = OxyPlot.Axes.AxisPosition.Bottom,
-                IsAxisVisible = false,
-                Minimum = -0.5,
-                Maximum = 3.5
-            });
-
-            this.PlotModel.Axes.Add(new OxyPlot.Axes.LinearAxis
-            {
-                Position = OxyPlot.Axes.AxisPosition.Left,
-                IsAxisVisible = false,
-                Minimum = 0,
-                Maximum = 8
-            });
-
             CreateSampleData();
         }
 
