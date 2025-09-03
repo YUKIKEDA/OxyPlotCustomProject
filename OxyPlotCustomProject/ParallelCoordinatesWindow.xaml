@@ -6,6 +6,7 @@
     xmlns:local="clr-namespace:OxyPlotCustomProject"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:oxy="http://oxyplot.org/wpf"
+    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
     Title="Parallel Coordinates Plot"
     Width="1000"
     Height="600"
@@ -49,7 +50,7 @@
                 FontWeight="Bold"
                 BorderBrush="DarkRed"
                 BorderThickness="1"
-                Click="ResetButton_Click"
+                Command="{Binding ResetCommand}"
                 Cursor="Hand">
                 <Button.Style>
                     <Style TargetType="Button">
@@ -68,6 +69,12 @@
             x:Name="plotView"
             Grid.Row="2"
             Margin="10"
-            Model="{Binding PlotModel}" />
+            Model="{Binding PlotModel}">
+            <i:Interaction.Behaviors>
+                <local:PlotViewMouseBehavior 
+                    MouseMoveCommand="{Binding MouseMoveCommand}"
+                    MouseDownCommand="{Binding MouseDownCommand}" />
+            </i:Interaction.Behaviors>
+        </oxy:PlotView>
     </Grid>
 </Window>

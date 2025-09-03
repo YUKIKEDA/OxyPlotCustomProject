@@ -3,16 +3,27 @@ using OxyPlot.Legends;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Input;
+using System.Windows;
 
 namespace OxyPlotCustomProject
 {
     public class ParallelCoordinatesViewModel
     {
         public PlotModel PlotModel { get; }
+        
+        public ICommand ResetCommand { get; }
+        public ICommand MouseMoveCommand { get; }
+        public ICommand MouseDownCommand { get; }
 
         public ParallelCoordinatesViewModel()
         {
             this.PlotModel = new PlotModel { Title = "Parallel Coordinates Plot Demo" };
+            
+            // コマンドを初期化
+            ResetCommand = new RelayCommand(ResetHighlightAndSelection);
+            MouseMoveCommand = new RelayCommand<ScreenPoint>(HandleMouseMove);
+            MouseDownCommand = new RelayCommand<ScreenPoint>(HandleMouseDown);
 
             CreateSampleData();
         }
@@ -100,6 +111,32 @@ namespace OxyPlotCustomProject
             if (parallelSeries != null)
             {
                 parallelSeries.ResetHighlightAndSelection();
+            }
+        }
+
+        /// <summary>
+        /// マウス移動時の処理
+        /// </summary>
+        /// <param name="screenPoint">スクリーン座標</param>
+        private void HandleMouseMove(ScreenPoint screenPoint)
+        {
+            var parallelSeries = this.PlotModel.Series.OfType<ParallelCoordinatesSeries>().FirstOrDefault();
+            if (parallelSeries != null)
+            {
+                parallelSeries.GetNearestPoint(screenPoint, false);
+            }
+        }
+
+        /// <summary>
+        /// マウスクリック時の処理
+        /// </summary>
+        /// <param name="screenPoint">スクリーン座標</param>
+        private void HandleMouseDown(ScreenPoint screenPoint)
+        {
+            var parallelSeries = this.PlotModel.Series.OfType<ParallelCoordinatesSeries>().FirstOrDefault();
+            if (parallelSeries != null)
+            {
+                parallelSeries.HandleMouseDown(screenPoint);
             }
         }
     }
