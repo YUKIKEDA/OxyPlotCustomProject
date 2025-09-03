@@ -162,6 +162,16 @@ namespace OxyPlotCustomProject
         public string FontFamily { get; set; }
 
         /// <summary>
+        /// 軸の色
+        /// </summary>
+        public OxyColor AxisColor { get; set; }
+
+        /// <summary>
+        /// 軸の太さ
+        /// </summary>
+        public double AxisThickness { get; set; }
+
+        /// <summary>
         /// ParallelCoordinatesSeriesの新しいインスタンスを初期化します
         /// </summary>
         public ParallelCoordinatesSeries()
@@ -197,6 +207,10 @@ namespace OxyPlotCustomProject
             AxisLabelVerticalOffset = 20.0;
             TickLabelHorizontalOffset = 10.0;
             FontFamily = "Arial";
+            
+            // 軸のデフォルト値
+            AxisColor = OxyColors.Black;
+            AxisThickness = 1.0;
         }
 
         /// <summary>
@@ -361,9 +375,6 @@ namespace OxyPlotCustomProject
         /// <param name="rc">レンダリングコンテキスト</param>
         private void RenderAxes(IRenderContext rc)
         {
-            var axisColor = OxyColors.Black;
-            var axisThickness = 1.0;
-            
             for (int i = 0; i < Dimensions.Count; i++)
             {
                 var dimension = Dimensions[i];
@@ -374,7 +385,7 @@ namespace OxyPlotCustomProject
                 var topPoint = new ScreenPoint(x, PlotModel.PlotArea.Top + PlotAreaMargin);
                 var bottomPoint = new ScreenPoint(x, PlotModel.PlotArea.Bottom - PlotAreaMargin);
 
-                rc.DrawLine(new[] { topPoint, bottomPoint }, axisColor, axisThickness, EdgeRenderingMode.Automatic);
+                rc.DrawLine(new[] { topPoint, bottomPoint }, AxisColor, AxisThickness, EdgeRenderingMode.Automatic);
 
                 // 軸のタイトルを上部に描画
                 if (ShowAxisLabelsTop)
