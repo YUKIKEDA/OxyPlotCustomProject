@@ -672,99 +672,138 @@ namespace OxyPlotCustomProject
             }
 
             var lines = FixedTooltipInfo.Text.Split('\n');
-            double lineHeight = TooltipLineHeight;
-            double padding = TooltipPadding;
-            double fontSize = TooltipFontSize;
 
             // ツールチップのサイズを計算
             double maxWidth = 0;
             foreach (var line in lines)
             {
-                var size = rc.MeasureText(line, FontFamily, fontSize, OxyPlot.FontWeights.Normal);
+                var size = rc.MeasureText(line, FontFamily, TooltipFontSize, OxyPlot.FontWeights.Normal);
                 maxWidth = Math.Max(maxWidth, size.Width);
             }
 
-            double tooltipWidth = maxWidth + 2 * padding;
-            double tooltipHeight = lines.Length * lineHeight + 2 * padding;
+            double tooltipWidth = maxWidth + 2 * TooltipPadding;
+            double tooltipHeight = lines.Length * TooltipLineHeight + 2 * TooltipPadding;
 
-            // ツールチップの位置を調整（軸と重ならないように）
-            double clickX = FixedTooltipInfo.Position.X;
-            double clickY = FixedTooltipInfo.Position.Y;
-            
-            // 軸の位置を避けるため、軸間の中央付近に配置を試みる
-            double bestX = clickX + TooltipOffset;
-            double bestY = clickY - tooltipHeight - TooltipOffset;
-            
-            // 各軸の位置をチェックして、軸から離れた位置を選択
-            double minDistanceFromAxis = double.MaxValue;
-            for (int dimIndex = 0; dimIndex < Dimensions.Count; dimIndex++)
-            {
-                double availableWidth = PlotModel.PlotArea.Width - (2 * HorizontalMargin);
-                double axisX = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * dimIndex / (Dimensions.Count - 1));
-                double distance = Math.Abs(bestX + tooltipWidth / 2 - axisX);
-                
-                // 軸に近すぎる場合は位置を調整
-                if (distance < tooltipWidth / 2 + TickLabelHorizontalOffset)
-                {
-                    if (dimIndex < Dimensions.Count - 1)
-                    {
-                        // 次の軸との中間点に移動
-                        double nextAxisX = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * (dimIndex + 1) / (Dimensions.Count - 1));
-                        bestX = (axisX + nextAxisX - tooltipWidth) / 2;
-                    }
-                    else if (dimIndex > 0)
-                    {
-                        // 前の軸との中間点に移動
-                        double prevAxisX = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * (dimIndex - 1) / (Dimensions.Count - 1));
-                        bestX = (prevAxisX + axisX - tooltipWidth) / 2;
-                    }
-                }
-                
-                minDistanceFromAxis = Math.Min(minDistanceFromAxis, distance);
-            }
-            
-            // 画面外に出ないように最終調整
-            if (bestX + tooltipWidth > PlotModel.PlotArea.Right)
-            {
-                bestX = PlotModel.PlotArea.Right - tooltipWidth - TickLength;
-            }
-            if (bestX < PlotModel.PlotArea.Left)
-            {
-                bestX = PlotModel.PlotArea.Left + TickLength;
-            }
-                
-            if (bestY < PlotModel.PlotArea.Top)
-            {
-                bestY = clickY + TooltipOffset;
-            }
-            if (bestY + tooltipHeight > PlotModel.PlotArea.Bottom)
-            {
-                bestY = PlotModel.PlotArea.Bottom - tooltipHeight - TickLength;
-            }
-            
-            double x = bestX;
-            double y = bestY;
+            // ツールチップの位置を計算
+            var position = CalculateTooltipPosition(FixedTooltipInfo.Position, tooltipWidth, tooltipHeight);
+            double x = position.X;
+            double y = position.Y;
 
+            // TODO 背景色や線の太さ、色を設定できるようにする
             // 背景を描画
             var backgroundRect = new OxyRect(x, y, tooltipWidth, tooltipHeight);
-            rc.DrawRectangle(backgroundRect, OxyColor.FromArgb(240, 255, 255, 255), OxyColors.Gray, 1, EdgeRenderingMode.Automatic);
+            rc.DrawRectangle(
+                backgroundRect, 
+                OxyColor.FromArgb(240, 255, 255, 255), 
+                OxyColors.Gray, 
+                1, 
+                EdgeRenderingMode.Automatic
+            );
 
             // テキストを描画
             for (int i = 0; i < lines.Length; i++)
             {
-                var textPosition = new ScreenPoint(x + padding, y + padding + i * lineHeight);
+                // TODO 色やアライメントを設定できるようにする
+                var textPosition = new ScreenPoint(x + TooltipPadding, y + TooltipPadding + i * TooltipLineHeight);
                 rc.DrawText(
                     textPosition, 
                     lines[i], 
                     OxyColors.Black, 
                     FontFamily, 
-                    fontSize, 
+                    TooltipFontSize, 
                     OxyPlot.FontWeights.Normal, 
                     0, 
                     OxyPlot.HorizontalAlignment.Left, 
                     OxyPlot.VerticalAlignment.Top
                 );
             }
+        }
+
+        /// <summary>
+        /// ツールチップの最適な位置を計算します
+        /// </summary>
+        /// <param name="clickPosition">クリック位置</param>
+        /// <param name="tooltipWidth">ツールチップの幅</param>
+        /// <param name="tooltipHeight">ツールチップの高さ</param>
+        /// <returns>ツールチップの位置</returns>
+        private ScreenPoint CalculateTooltipPosition(ScreenPoint clickPosition, double tooltipWidth, double tooltipHeight)
+        {
+            double clickX = clickPosition.X;
+            double clickY = clickPosition.Y;
+
+            // 軸の位置を避けるため、軸間の中央付近に配置を試みる
+            
+            // 初期位置：クリック位置から少しオフセットして配置
+            // X座標：右側にオフセット、Y座標：上側にオフセット（ツールチップがクリック位置を隠さないように）
+            double bestX = clickX + TooltipOffset;
+            double bestY = clickY - tooltipHeight - TooltipOffset;
+            
+            // 各軸の位置をチェックして、軸から離れた位置を選択
+            // 軸とツールチップが重ならないようにするため
+            double minDistanceFromAxis = double.MaxValue;
+            for (int dimIndex = 0; dimIndex < Dimensions.Count; dimIndex++)
+            {
+                // プロットエリア内で軸が配置される幅を計算
+                // 左右のマージンを除いた利用可能な幅
+                double availableWidth = PlotModel.PlotArea.Width - (2 * HorizontalMargin);
+                
+                // 現在の軸のX座標を計算
+                // 軸は等間隔で配置される（0番目から最後まで均等に分散）
+                double axisX = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * dimIndex / (Dimensions.Count - 1));
+                
+                // ツールチップの中心と軸の距離を計算
+                // ツールチップの中心位置 = bestX + tooltipWidth / 2
+                double distance = Math.Abs(bestX + tooltipWidth / 2 - axisX);
+                
+                // 軸に近すぎる場合（ツールチップが軸と重なる可能性がある場合）は位置を調整
+                // 判定条件：距離 < ツールチップの半分の幅 + 軸ラベルのオフセット
+                if (distance < tooltipWidth / 2 + TickLabelHorizontalOffset)
+                {
+                    if (dimIndex < Dimensions.Count - 1)
+                    {
+                        // 次の軸との中間点に移動
+                        // 現在の軸と次の軸の間の中央にツールチップを配置
+                        double nextAxisX = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * (dimIndex + 1) / (Dimensions.Count - 1));
+                        bestX = (axisX + nextAxisX - tooltipWidth) / 2;
+                    }
+                    else if (dimIndex > 0)
+                    {
+                        // 前の軸との中間点に移動
+                        // 最後の軸の場合は、前の軸との間の中央に配置
+                        double prevAxisX = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * (dimIndex - 1) / (Dimensions.Count - 1));
+                        bestX = (prevAxisX + axisX - tooltipWidth) / 2;
+                    }
+                }
+                
+                // 最小距離を更新（デバッグ用）
+                minDistanceFromAxis = Math.Min(minDistanceFromAxis, distance);
+            }
+            
+            // 画面外に出ないように最終調整
+            // 右端を超える場合：右端からツールチップ幅とティック長を引いた位置に調整
+            if (bestX + tooltipWidth > PlotModel.PlotArea.Right)
+            {
+                bestX = PlotModel.PlotArea.Right - tooltipWidth - TickLength;
+            }
+            // 左端を超える場合：左端からティック長分オフセットした位置に調整
+            if (bestX < PlotModel.PlotArea.Left)
+            {
+                bestX = PlotModel.PlotArea.Left + TickLength;
+            }
+            
+            // Y座標の調整
+            // 上端を超える場合：クリック位置の下側に表示
+            if (bestY < PlotModel.PlotArea.Top)
+            {
+                bestY = clickY + TooltipOffset;
+            }
+            // 下端を超える場合：下端からツールチップ高さとティック長を引いた位置に調整
+            if (bestY + tooltipHeight > PlotModel.PlotArea.Bottom)
+            {
+                bestY = PlotModel.PlotArea.Bottom - tooltipHeight - TickLength;
+            }
+            
+            return new ScreenPoint(bestX, bestY);
         }
 
         /// <summary>
