@@ -251,37 +251,10 @@ namespace OxyPlotCustomProject
         /// <returns>常にnullを返します（トラッカー機能無効化のため）</returns>
         public override TrackerHitResult? GetNearestPoint(ScreenPoint point, bool interpolate)
         {
-            // トラッカー機能を完全に無効化するため、ハイライト処理のみ実行してnullを返す
-            if (Dimensions == null || Dimensions.Count == 0)
-            {
-                return null;
-            }
+            // ハイライト処理を実行
+            UpdateHighlightState(point);
 
-            int nearestLineIndex = FindNearestLineIndex(point);
-
-            if (nearestLineIndex >= 0)
-            {
-                // ハイライト状態を更新
-                var oldHighlight = HighlightedLineIndex;
-                HighlightedLineIndex = nearestLineIndex;
-                
-                // 再描画が必要な場合
-                if (oldHighlight != HighlightedLineIndex)
-                {
-                    PlotModel?.InvalidatePlot(false);
-                }
-            }
-            else
-            {
-                // ハイライトをクリア
-                if (HighlightedLineIndex >= 0)
-                {
-                    HighlightedLineIndex = -1;
-                    PlotModel?.InvalidatePlot(false);
-                }
-            }
-
-            // トラッカーを完全に無効化するためnullを返す
+            // トラッカー機能は無効化するためnullを返す
             return null;
         }
 
@@ -762,6 +735,37 @@ namespace OxyPlotCustomProject
             }
             
             return new ScreenPoint(bestX, bestY);
+        }
+
+        /// <summary>
+        /// 指定した点に基づいてハイライト状態を更新します
+        /// </summary>
+        /// <param name="point">スクリーン座標の点</param>
+        private void UpdateHighlightState(ScreenPoint point)
+        {
+            int nearestLineIndex = FindNearestLineIndex(point);
+
+            if (nearestLineIndex >= 0)
+            {
+                // ハイライト状態を更新
+                var oldHighlight = HighlightedLineIndex;
+                HighlightedLineIndex = nearestLineIndex;
+                
+                // 再描画が必要な場合
+                if (oldHighlight != HighlightedLineIndex)
+                {
+                    PlotModel?.InvalidatePlot(false);
+                }
+            }
+            else
+            {
+                // ハイライトをクリア
+                if (HighlightedLineIndex >= 0)
+                {
+                    HighlightedLineIndex = -1;
+                    PlotModel?.InvalidatePlot(false);
+                }
+            }
         }
 
         /// <summary>
