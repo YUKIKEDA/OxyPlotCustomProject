@@ -156,6 +156,11 @@ namespace OxyPlotCustomProject
         /// </summary>
         public double TickLabelHorizontalOffset { get; set; }
 
+        /// <summary>
+        /// フォントファミリー
+        /// </summary>
+        public string FontFamily { get; set; }
+
         public ParallelCoordinatesSeries()
         {
             Dimensions = new List<ParallelDimension>();
@@ -188,6 +193,7 @@ namespace OxyPlotCustomProject
             AxisTitleVerticalOffset = 10.0;
             AxisLabelVerticalOffset = 20.0;
             TickLabelHorizontalOffset = 10.0;
+            FontFamily = "Arial";
         }
 
         public override void Render(IRenderContext rc)
@@ -305,7 +311,7 @@ namespace OxyPlotCustomProject
                 if (ShowAxisLabelsTop)
                 {
                     var titleTopPoint = new ScreenPoint(x, PlotModel.PlotArea.Top + PlotAreaMargin - AxisTitleVerticalOffset);
-                    rc.DrawText(titleTopPoint, dimension.Label, OxyColors.Black, fontFamily: "Arial", fontSize: AxisTitleFontSize, 
+                    rc.DrawText(titleTopPoint, dimension.Label, OxyColors.Black, fontFamily: FontFamily, fontSize: AxisTitleFontSize, 
                         fontWeight: OxyPlot.FontWeights.Bold, rotation: 0, 
                         horizontalAlignment: OxyPlot.HorizontalAlignment.Center, 
                         verticalAlignment: OxyPlot.VerticalAlignment.Bottom);
@@ -315,7 +321,7 @@ namespace OxyPlotCustomProject
                 if (ShowAxisLabelsBottom)
                 {
                     var titleBottomPoint = new ScreenPoint(x, PlotModel.PlotArea.Bottom - PlotAreaMargin + AxisLabelVerticalOffset);
-                    rc.DrawText(titleBottomPoint, dimension.Label, OxyColors.Gray, fontFamily: "Arial", fontSize: AxisLabelFontSize, 
+                    rc.DrawText(titleBottomPoint, dimension.Label, OxyColors.Gray, fontFamily: FontFamily, fontSize: AxisLabelFontSize, 
                         fontWeight: OxyPlot.FontWeights.Normal, rotation: 0, 
                         horizontalAlignment: OxyPlot.HorizontalAlignment.Center, 
                         verticalAlignment: OxyPlot.VerticalAlignment.Top);
@@ -351,7 +357,7 @@ namespace OxyPlotCustomProject
 
                 // 目盛りラベル
                 rc.DrawText(new ScreenPoint(x + TickLabelHorizontalOffset, y), value.ToString("F1"), OxyColors.Black, 
-                    fontFamily: "Arial", fontSize: AxisLabelFontSize, fontWeight: OxyPlot.FontWeights.Normal, 
+                    fontFamily: FontFamily, fontSize: AxisLabelFontSize, fontWeight: OxyPlot.FontWeights.Normal, 
                     rotation: 0, horizontalAlignment: OxyPlot.HorizontalAlignment.Left, 
                     verticalAlignment: OxyPlot.VerticalAlignment.Middle);
             }
@@ -706,7 +712,7 @@ namespace OxyPlotCustomProject
             double maxWidth = 0;
             foreach (var line in lines)
             {
-                var size = rc.MeasureText(line, "Arial", fontSize, OxyPlot.FontWeights.Normal);
+                var size = rc.MeasureText(line, FontFamily, fontSize, OxyPlot.FontWeights.Normal);
                 maxWidth = Math.Max(maxWidth, size.Width);
             }
 
@@ -771,7 +777,7 @@ namespace OxyPlotCustomProject
             for (int i = 0; i < lines.Length; i++)
             {
                 var textPosition = new ScreenPoint(x + padding, y + padding + i * lineHeight);
-                rc.DrawText(textPosition, lines[i], OxyColors.Black, "Arial", fontSize, 
+                rc.DrawText(textPosition, lines[i], OxyColors.Black, FontFamily, fontSize, 
                     OxyPlot.FontWeights.Normal, 0, OxyPlot.HorizontalAlignment.Left, 
                     OxyPlot.VerticalAlignment.Top);
             }
