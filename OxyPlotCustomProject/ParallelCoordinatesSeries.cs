@@ -378,7 +378,9 @@ namespace OxyPlotCustomProject
             for (int i = 0; i < Dimensions.Count; i++)
             {
                 var dimension = Dimensions[i];
+                // 水平方向の利用可能な幅を計算（左右の余白を除く）
                 double availableWidth = PlotModel.PlotArea.Width - (2 * HorizontalMargin);
+                // 各軸のX座標を計算（軸間隔を等分に配置）
                 double x = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * i / (Dimensions.Count - 1));
 
                 // 軸の垂直線を描画（余白を考慮）
@@ -391,18 +393,31 @@ namespace OxyPlotCustomProject
                 if (ShowAxisLabelsTop)
                 {
                     var titleTopPoint = new ScreenPoint(x, PlotModel.PlotArea.Top + PlotAreaMargin - AxisTitleVerticalOffset);
-                    rc.DrawText(titleTopPoint, dimension.Label, OxyColors.Black, fontFamily: FontFamily, fontSize: AxisTitleFontSize, 
-                        fontWeight: OxyPlot.FontWeights.Bold, rotation: 0, 
+                    rc.DrawText(
+                        titleTopPoint, 
+                        dimension.Label, 
+                        OxyColors.Black, 
+                        fontFamily: FontFamily, 
+                        fontSize: AxisTitleFontSize, 
+                        fontWeight: OxyPlot.FontWeights.Bold, 
+                        rotation: 0, 
                         horizontalAlignment: OxyPlot.HorizontalAlignment.Center, 
-                        verticalAlignment: OxyPlot.VerticalAlignment.Bottom);
+                        verticalAlignment: OxyPlot.VerticalAlignment.Bottom
+                    );
                 }
 
                 // 軸のタイトルを下部に描画（オプション）
                 if (ShowAxisLabelsBottom)
                 {
                     var titleBottomPoint = new ScreenPoint(x, PlotModel.PlotArea.Bottom - PlotAreaMargin + AxisLabelVerticalOffset);
-                    rc.DrawText(titleBottomPoint, dimension.Label, OxyColors.Gray, fontFamily: FontFamily, fontSize: AxisLabelFontSize, 
-                        fontWeight: OxyPlot.FontWeights.Normal, rotation: 0, 
+                    rc.DrawText(
+                        titleBottomPoint, 
+                        dimension.Label, 
+                        OxyColors.Gray, 
+                        fontFamily: FontFamily, 
+                        fontSize: AxisLabelFontSize, 
+                        fontWeight: OxyPlot.FontWeights.Normal, 
+                        rotation: 0, 
                         horizontalAlignment: OxyPlot.HorizontalAlignment.Center, 
                         verticalAlignment: OxyPlot.VerticalAlignment.Top);
                 }
@@ -420,32 +435,51 @@ namespace OxyPlotCustomProject
         /// <param name="dimension">次元情報</param>
         private void RenderAxisTicks(IRenderContext rc, int axisIndex, ParallelDimension dimension)
         {
+            // 水平方向の利用可能な幅を計算（左右の余白を除く）
             double availableWidth = PlotModel.PlotArea.Width - (2 * HorizontalMargin);
+            // 指定された軸のX座標を計算（軸間隔を等分に配置）
             double x = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * axisIndex / (Dimensions.Count - 1));
             int tickCount = AxisTickCount;
             
-            // 上下に余白を設けるため、プロット領域を少し縮小
+            // 垂直方向の利用可能な高さを計算（上下の余白を除く）
             double availableHeight = PlotModel.PlotArea.Height - (2 * PlotAreaMargin);
+            // プロット領域の上下端の座標を計算
             double plotTop = PlotModel.PlotArea.Top + PlotAreaMargin;
             double plotBottom = PlotModel.PlotArea.Bottom - PlotAreaMargin;
             
             for (int t = 0; t <= tickCount; t++)
             {
+                // 目盛りの値を計算（最小値から最大値まで等間隔で分割）
                 double value = dimension.Range[0] + (dimension.Range[1] - dimension.Range[0]) * t / tickCount;
+                // 値を0-1の範囲に正規化（最小値=0, 最大値=1）
                 double normalizedValue = (value - dimension.Range[0]) / (dimension.Range[1] - dimension.Range[0]);
+                // 正規化された値をY座標に変換（下から上に向かって配置）
                 double y = plotBottom - normalizedValue * availableHeight;
 
                 // 目盛り線
-                rc.DrawLine(new[] { 
-                    new ScreenPoint(x - TickLength, y), 
-                    new ScreenPoint(x + TickLength, y) 
-                }, OxyColors.Black, 1.0, EdgeRenderingMode.Automatic);
+                rc.DrawLine(
+                    new[] 
+                    { 
+                        new ScreenPoint(x - TickLength, y), 
+                        new ScreenPoint(x + TickLength, y) 
+                    }, 
+                    OxyColors.Black, 
+                    1.0, 
+                    EdgeRenderingMode.Automatic
+                );
 
                 // 目盛りラベル
-                rc.DrawText(new ScreenPoint(x + TickLabelHorizontalOffset, y), value.ToString("F1"), OxyColors.Black, 
-                    fontFamily: FontFamily, fontSize: AxisLabelFontSize, fontWeight: OxyPlot.FontWeights.Normal, 
-                    rotation: 0, horizontalAlignment: OxyPlot.HorizontalAlignment.Left, 
-                    verticalAlignment: OxyPlot.VerticalAlignment.Middle);
+                rc.DrawText(
+                    new ScreenPoint(x + TickLabelHorizontalOffset, y), 
+                    value.ToString("F1"), 
+                    OxyColors.Black, 
+                    fontFamily: FontFamily, 
+                    fontSize: AxisLabelFontSize, 
+                    fontWeight: OxyPlot.FontWeights.Normal, 
+                    rotation: 0, 
+                    horizontalAlignment: OxyPlot.HorizontalAlignment.Left, 
+                    verticalAlignment: OxyPlot.VerticalAlignment.Middle
+                );
             }
         }
 
@@ -501,8 +535,16 @@ namespace OxyPlotCustomProject
                 {
                     for (int i = 0; i < screenPoints.Count - 1; i++)
                     {
-                        rc.DrawLine(new[] { screenPoints[i], screenPoints[i + 1] }, 
-                            lineColor, thickness, EdgeRenderingMode.Automatic);
+                        rc.DrawLine(
+                            new[] 
+                            { 
+                                screenPoints[i], 
+                                screenPoints[i + 1] 
+                            }, 
+                            lineColor, 
+                            thickness, 
+                            EdgeRenderingMode.Automatic
+                        );
                     }
                 }
             }
@@ -893,9 +935,17 @@ namespace OxyPlotCustomProject
             for (int i = 0; i < lines.Length; i++)
             {
                 var textPosition = new ScreenPoint(x + padding, y + padding + i * lineHeight);
-                rc.DrawText(textPosition, lines[i], OxyColors.Black, FontFamily, fontSize, 
-                    OxyPlot.FontWeights.Normal, 0, OxyPlot.HorizontalAlignment.Left, 
-                    OxyPlot.VerticalAlignment.Top);
+                rc.DrawText(
+                    textPosition, 
+                    lines[i], 
+                    OxyColors.Black, 
+                    FontFamily, 
+                    fontSize, 
+                    OxyPlot.FontWeights.Normal, 
+                    0, 
+                    OxyPlot.HorizontalAlignment.Left, 
+                    OxyPlot.VerticalAlignment.Top
+                );
             }
         }
     }
