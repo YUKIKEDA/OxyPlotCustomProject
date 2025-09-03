@@ -112,6 +112,92 @@ namespace OxyPlotCustomProject
             RenderDataLines(rc);
         }
 
+        protected override void UpdateData()
+        {
+            // データの更新処理
+        }
+
+        public override TrackerHitResult? GetNearestPoint(ScreenPoint point, bool interpolate)
+        {
+            if (Dimensions == null || Dimensions.Count == 0)
+                return null;
+
+            double plotAreaMargin = 30.0;
+            double availableHeight = PlotModel.PlotArea.Height - (2 * plotAreaMargin);
+            double plotBottom = PlotModel.PlotArea.Bottom - plotAreaMargin;
+
+            int valueCount = Dimensions[0].Values.Length;
+            double minDistance = double.MaxValue;
+            int nearestLineIndex = -1;
+
+            // 各線について距離をチェック
+            for (int lineIndex = 0; lineIndex < valueCount; lineIndex++)
+            {
+                var screenPoints = new List<ScreenPoint>();
+
+                // 各次元の値を取得してスクリーン座標に変換
+                for (int dimIndex = 0; dimIndex < Dimensions.Count; dimIndex++)
+                {
+                    var dimension = Dimensions[dimIndex];
+                    
+                    if (lineIndex >= dimension.Values.Length)
+                        break;
+
+                    double value = dimension.Values[lineIndex];
+                    double normalizedValue = (value - dimension.Range[0]) / (dimension.Range[1] - dimension.Range[0]);
+                    
+                    double y = plotBottom - normalizedValue * availableHeight;
+                    double x = XAxis.Transform(dimIndex);
+
+                    screenPoints.Add(new ScreenPoint(x, y));
+                }
+
+                // 線分との距離を計算
+                for (int i = 0; i < screenPoints.Count - 1; i++)
+                {
+                    double distance = DistanceToLineSegment(point, screenPoints[i], screenPoints[i + 1]);
+                    if (distance < minDistance && distance < 20) // 20ピクセル以内（感度向上）
+                    {
+                        minDistance = distance;
+                        nearestLineIndex = lineIndex;
+                    }
+                }
+            }
+
+            if (nearestLineIndex >= 0)
+            {
+                // ハイライト状態を更新
+                var oldHighlight = HighlightedLineIndex;
+                HighlightedLineIndex = nearestLineIndex;
+                
+                // 再描画が必要な場合
+                if (oldHighlight != HighlightedLineIndex)
+                {
+                    PlotModel?.InvalidatePlot(false);
+                }
+
+                return new TrackerHitResult
+                {
+                    Series = this,
+                    DataPoint = new DataPoint(nearestLineIndex, 0),
+                    Position = point,
+                    Item = nearestLineIndex,
+                    Text = $"Line {nearestLineIndex}"
+                };
+            }
+            else
+            {
+                // ハイライトをクリア
+                if (HighlightedLineIndex >= 0)
+                {
+                    HighlightedLineIndex = -1;
+                    PlotModel?.InvalidatePlot(false);
+                }
+            }
+
+            return null;
+        }
+
         private void RenderAxes(IRenderContext rc)
         {
             var axisColor = OxyColors.Black;
@@ -318,92 +404,6 @@ namespace OxyPlotCustomProject
             }
 
             return LineColor;
-        }
-
-        protected override void UpdateData()
-        {
-            // データの更新処理
-        }
-
-        public override TrackerHitResult? GetNearestPoint(ScreenPoint point, bool interpolate)
-        {
-            if (Dimensions == null || Dimensions.Count == 0)
-                return null;
-
-            double plotAreaMargin = 30.0;
-            double availableHeight = PlotModel.PlotArea.Height - (2 * plotAreaMargin);
-            double plotBottom = PlotModel.PlotArea.Bottom - plotAreaMargin;
-
-            int valueCount = Dimensions[0].Values.Length;
-            double minDistance = double.MaxValue;
-            int nearestLineIndex = -1;
-
-            // 各線について距離をチェック
-            for (int lineIndex = 0; lineIndex < valueCount; lineIndex++)
-            {
-                var screenPoints = new List<ScreenPoint>();
-
-                // 各次元の値を取得してスクリーン座標に変換
-                for (int dimIndex = 0; dimIndex < Dimensions.Count; dimIndex++)
-                {
-                    var dimension = Dimensions[dimIndex];
-                    
-                    if (lineIndex >= dimension.Values.Length)
-                        break;
-
-                    double value = dimension.Values[lineIndex];
-                    double normalizedValue = (value - dimension.Range[0]) / (dimension.Range[1] - dimension.Range[0]);
-                    
-                    double y = plotBottom - normalizedValue * availableHeight;
-                    double x = XAxis.Transform(dimIndex);
-
-                    screenPoints.Add(new ScreenPoint(x, y));
-                }
-
-                // 線分との距離を計算
-                for (int i = 0; i < screenPoints.Count - 1; i++)
-                {
-                    double distance = DistanceToLineSegment(point, screenPoints[i], screenPoints[i + 1]);
-                    if (distance < minDistance && distance < 20) // 20ピクセル以内（感度向上）
-                    {
-                        minDistance = distance;
-                        nearestLineIndex = lineIndex;
-                    }
-                }
-            }
-
-            if (nearestLineIndex >= 0)
-            {
-                // ハイライト状態を更新
-                var oldHighlight = HighlightedLineIndex;
-                HighlightedLineIndex = nearestLineIndex;
-                
-                // 再描画が必要な場合
-                if (oldHighlight != HighlightedLineIndex)
-                {
-                    PlotModel?.InvalidatePlot(false);
-                }
-
-                return new TrackerHitResult
-                {
-                    Series = this,
-                    DataPoint = new DataPoint(nearestLineIndex, 0),
-                    Position = point,
-                    Item = nearestLineIndex,
-                    Text = $"Line {nearestLineIndex}"
-                };
-            }
-            else
-            {
-                // ハイライトをクリア
-                if (HighlightedLineIndex >= 0)
-                {
-                    HighlightedLineIndex = -1;
-                    PlotModel?.InvalidatePlot(false);
-                }
-            }
-
-            return null;
         }
 
         /// <summary>
