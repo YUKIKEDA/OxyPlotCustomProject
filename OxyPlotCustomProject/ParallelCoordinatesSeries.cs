@@ -220,7 +220,7 @@ namespace OxyPlotCustomProject
                 // 軸のタイトルを上部に描画
                 if (ShowAxisLabelsTop)
                 {
-                    var titleTopPoint = new ScreenPoint(x, PlotModel.PlotArea.Top + plotAreaMargin - 20);
+                    var titleTopPoint = new ScreenPoint(x, PlotModel.PlotArea.Top + plotAreaMargin - 10);
                     rc.DrawText(titleTopPoint, dimension.Label, OxyColors.Black, fontFamily: "Arial", fontSize: 12, 
                         fontWeight: OxyPlot.FontWeights.Bold, rotation: 0, 
                         horizontalAlignment: OxyPlot.HorizontalAlignment.Center, 
