@@ -257,49 +257,7 @@ namespace OxyPlotCustomProject
                 return null;
             }
 
-            double availableHeight = PlotModel.PlotArea.Height - (2 * PlotAreaMargin);
-            double plotBottom = PlotModel.PlotArea.Bottom - PlotAreaMargin;
-
-            int valueCount = Dimensions[0].Values.Length;
-            double minDistance = double.MaxValue;
-            int nearestLineIndex = -1;
-
-            // 各線について距離をチェック
-            for (int lineIndex = 0; lineIndex < valueCount; lineIndex++)
-            {
-                var screenPoints = new List<ScreenPoint>();
-
-                // 各次元の値を取得してスクリーン座標に変換
-                for (int dimIndex = 0; dimIndex < Dimensions.Count; dimIndex++)
-                {
-                    var dimension = Dimensions[dimIndex];
-                    
-                    if (lineIndex >= dimension.Values.Length)
-                    {
-                        break;
-                    }
-
-                    double value = dimension.Values[lineIndex];
-                    double normalizedValue = (value - dimension.Range[0]) / (dimension.Range[1] - dimension.Range[0]);
-                    
-                    double y = plotBottom - normalizedValue * availableHeight;
-                    double availableWidth = PlotModel.PlotArea.Width - (2 * HorizontalMargin);
-                    double x = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * dimIndex / (Dimensions.Count - 1));
-
-                    screenPoints.Add(new ScreenPoint(x, y));
-                }
-
-                // 線分との距離を計算
-                for (int i = 0; i < screenPoints.Count - 1; i++)
-                {
-                    double distance = DistanceToLineSegment(point, screenPoints[i], screenPoints[i + 1]);
-                    if (distance < minDistance && distance < MouseSensitivity)
-                    {
-                        minDistance = distance;
-                        nearestLineIndex = lineIndex;
-                    }
-                }
-            }
+            int nearestLineIndex = FindNearestLineIndex(point);
 
             if (nearestLineIndex >= 0)
             {
@@ -838,7 +796,7 @@ namespace OxyPlotCustomProject
         /// <param name="point">クリックされたスクリーン座標</param>
         public void HandleMouseDown(ScreenPoint point)
         {
-            var lineIndex = GetNearestLineIndex(point);
+            var lineIndex = FindNearestLineIndex(point);
             if (lineIndex >= 0)
             {
                 // 選択状態を設定（同じ線をクリックした場合は選択解除）
@@ -874,11 +832,11 @@ namespace OxyPlotCustomProject
         }
 
         /// <summary>
-        /// 指定した点に最も近い線のインデックスを取得します
+        /// 指定した点に最も近い線のインデックスを検索します
         /// </summary>
         /// <param name="point">スクリーン座標の点</param>
         /// <returns>最も近い線のインデックス（見つからない場合は-1）</returns>
-        private int GetNearestLineIndex(ScreenPoint point)
+        private int FindNearestLineIndex(ScreenPoint point)
         {
             if (Dimensions == null || Dimensions.Count == 0)
             {
