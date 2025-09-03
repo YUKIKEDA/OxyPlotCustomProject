@@ -12,6 +12,11 @@ namespace OxyPlotCustomProject
     public class ParallelCoordinatesSeries : ItemsSeries
     {
         /// <summary>
+        /// 線分が点かどうかを判定するための閾値（浮動小数点数の精度誤差を考慮）
+        /// </summary>
+        private const double LineSegmentEpsilon = 1e-10;
+        
+        /// <summary>
         /// 次元（軸）のリスト - 各軸に値の配列を持つ
         /// </summary>
         public List<ParallelDimension> Dimensions { get; set; }
@@ -836,17 +841,28 @@ namespace OxyPlotCustomProject
         /// <returns>点から線分までの最短距離</returns>
         private double DistanceToLineSegment(ScreenPoint point, ScreenPoint lineStart, ScreenPoint lineEnd)
         {
+            // 線分の方向ベクトルを計算
             double dx = lineEnd.X - lineStart.X;
             double dy = lineEnd.Y - lineStart.Y;
             
-            if (Math.Abs(dx) < 1e-10 && Math.Abs(dy) < 1e-10)
+            // 線分が点（長さがほぼ0）かどうかをチェック
+            if (Math.Abs(dx) < LineSegmentEpsilon && Math.Abs(dy) < LineSegmentEpsilon)
             {
-                // 線分が点の場合
+                // 線分が点の場合、点から点までの距離を返す
                 return Math.Sqrt(Math.Pow(point.X - lineStart.X, 2) + Math.Pow(point.Y - lineStart.Y, 2));
             }
 
-            double t = Math.Max(0, Math.Min(1, ((point.X - lineStart.X) * dx + (point.Y - lineStart.Y) * dy) / (dx * dx + dy * dy)));
+            // 点から線分への射影パラメータtを計算（0～1の範囲にクランプ）
+            // t = ((point - lineStart) · (lineEnd - lineStart)) / |lineEnd - lineStart|²
+            double t = Math.Max(
+                0, 
+                Math.Min(
+                    1, 
+                    ((point.X - lineStart.X) * dx + (point.Y - lineStart.Y) * dy) / (dx * dx + dy * dy)
+                )
+            );
             
+            // 線分上の射影点の座標を計算
             double projX = lineStart.X + t * dx;
             double projY = lineStart.Y + t * dy;
             
@@ -896,6 +912,44 @@ namespace OxyPlotCustomProject
         }
 
         /// <summary>
+        /// 指定した線のインデックスに対してツールチップテキストを作成します
+        /// </summary>
+        /// <param name="lineIndex">線のインデックス</param>
+        /// <returns>ツールチップテキスト</returns>
+        private string CreateTooltipText(int lineIndex)
+        {
+            // TODO ツールチップテキストの作成をより柔軟にできるようにする
+            if (Dimensions == null || Dimensions.Count == 0 || lineIndex < 0)
+            {
+                return $"Line {lineIndex}";
+            }
+
+            var tooltipLines = new List<string>();
+            tooltipLines.Add($"Data Point {lineIndex}");
+            tooltipLines.Add(""); // 空行
+
+            // 各次元の値を表示
+            for (int dimIndex = 0; dimIndex < Dimensions.Count; dimIndex++)
+            {
+                var dimension = Dimensions[dimIndex];
+                if (lineIndex < dimension.Values.Length)
+                {
+                    double value = dimension.Values[lineIndex];
+                    tooltipLines.Add($"{dimension.Label}: {value:F2}");
+                }
+            }
+
+            // カラー値がある場合は表示
+            if (ColorValues != null && lineIndex < ColorValues.Length)
+            {
+                tooltipLines.Add(""); // 空行
+                tooltipLines.Add($"Color Value: {ColorValues[lineIndex]:F2}");
+            }
+
+            return string.Join("\n", tooltipLines);
+        }
+
+        /// <summary>
         /// ハイライトと選択状態をリセットします
         /// </summary>
         public void ResetHighlightAndSelection()
@@ -928,43 +982,6 @@ namespace OxyPlotCustomProject
             {
                 PlotModel?.InvalidatePlot(false);
             }
-        }
-
-        /// <summary>
-        /// 指定した線のインデックスに対してツールチップテキストを作成します
-        /// </summary>
-        /// <param name="lineIndex">線のインデックス</param>
-        /// <returns>ツールチップテキスト</returns>
-        private string CreateTooltipText(int lineIndex)
-        {
-            if (Dimensions == null || Dimensions.Count == 0 || lineIndex < 0)
-            {
-                return $"Line {lineIndex}";
-            }
-
-            var tooltipLines = new List<string>();
-            tooltipLines.Add($"Data Point {lineIndex}");
-            tooltipLines.Add(""); // 空行
-
-            // 各次元の値を表示
-            for (int dimIndex = 0; dimIndex < Dimensions.Count; dimIndex++)
-            {
-                var dimension = Dimensions[dimIndex];
-                if (lineIndex < dimension.Values.Length)
-                {
-                    double value = dimension.Values[lineIndex];
-                    tooltipLines.Add($"{dimension.Label}: {value:F2}");
-                }
-            }
-
-            // カラー値がある場合は表示
-            if (ColorValues != null && lineIndex < ColorValues.Length)
-            {
-                tooltipLines.Add(""); // 空行
-                tooltipLines.Add($"Color Value: {ColorValues[lineIndex]:F2}");
-            }
-
-            return string.Join("\n", tooltipLines);
         }
     }
 
