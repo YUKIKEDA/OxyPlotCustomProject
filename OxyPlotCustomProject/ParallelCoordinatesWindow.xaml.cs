@@ -15,7 +15,5 @@ namespace OxyPlotCustomProject
             viewModel = new ParallelCoordinatesViewModel();
             this.DataContext = viewModel;
         }
-
-
     }
 }
