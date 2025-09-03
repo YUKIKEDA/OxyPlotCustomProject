@@ -161,6 +161,9 @@ namespace OxyPlotCustomProject
         /// </summary>
         public string FontFamily { get; set; }
 
+        /// <summary>
+        /// ParallelCoordinatesSeriesの新しいインスタンスを初期化します
+        /// </summary>
         public ParallelCoordinatesSeries()
         {
             Dimensions = new List<ParallelDimension>();
@@ -196,10 +199,16 @@ namespace OxyPlotCustomProject
             FontFamily = "Arial";
         }
 
+        /// <summary>
+        /// シリーズをレンダリングします
+        /// </summary>
+        /// <param name="rc">レンダリングコンテキスト</param>
         public override void Render(IRenderContext rc)
         {
             if (Dimensions == null || Dimensions.Count == 0)
+            {
                 return;
+            }
 
             // 各軸の描画
             RenderAxes(rc);
@@ -211,16 +220,28 @@ namespace OxyPlotCustomProject
             RenderFixedTooltip(rc);
         }
 
+        /// <summary>
+        /// データを更新します
+        /// </summary>
         protected override void UpdateData()
         {
             // データの更新処理
         }
 
+        /// <summary>
+        /// 指定した点に最も近いデータポイントを取得します
+        /// このメソッドはハイライト機能のみを提供し、トラッカー機能は無効化されています
+        /// </summary>
+        /// <param name="point">スクリーン座標の点</param>
+        /// <param name="interpolate">補間を行うかどうか（使用されません）</param>
+        /// <returns>常にnullを返します（トラッカー機能無効化のため）</returns>
         public override TrackerHitResult? GetNearestPoint(ScreenPoint point, bool interpolate)
         {
             // トラッカー機能を完全に無効化するため、ハイライト処理のみ実行してnullを返す
             if (Dimensions == null || Dimensions.Count == 0)
+            {
                 return null;
+            }
 
             double availableHeight = PlotModel.PlotArea.Height - (2 * PlotAreaMargin);
             double plotBottom = PlotModel.PlotArea.Bottom - PlotAreaMargin;
@@ -240,7 +261,9 @@ namespace OxyPlotCustomProject
                     var dimension = Dimensions[dimIndex];
                     
                     if (lineIndex >= dimension.Values.Length)
+                    {
                         break;
+                    }
 
                     double value = dimension.Values[lineIndex];
                     double normalizedValue = (value - dimension.Range[0]) / (dimension.Range[1] - dimension.Range[0]);
@@ -290,6 +313,52 @@ namespace OxyPlotCustomProject
             return null;
         }
 
+        /// <summary>
+        /// 軸が必要かどうかを判定します
+        /// </summary>
+        /// <returns>常にfalse（独自の軸描画を使用するため）</returns>
+        protected override bool AreAxesRequired() => false;
+        
+        /// <summary>
+        /// 軸を確保します（使用されません）
+        /// </summary>
+        protected override void EnsureAxes() { }
+        
+        /// <summary>
+        /// 指定した軸を使用しているかどうかを判定します
+        /// </summary>
+        /// <param name="axis">確認する軸</param>
+        /// <returns>常にfalse（独自の軸描画を使用するため）</returns>
+        protected override bool IsUsing(OxyPlot.Axes.Axis axis) => false;
+        
+        /// <summary>
+        /// 軸の最大値・最小値を更新します（使用されません）
+        /// </summary>
+        protected override void UpdateAxisMaxMin() { }
+        
+        /// <summary>
+        /// 最大値・最小値を更新します（使用されません）
+        /// </summary>
+        protected override void UpdateMaxMin() { }
+        
+        /// <summary>
+        /// デフォルト値を設定します（使用されません）
+        /// </summary>
+        protected override void SetDefaultValues() { }
+
+        /// <summary>
+        /// 凡例シンボルを描画します
+        /// </summary>
+        /// <param name="rc">レンダリングコンテキスト</param>
+        /// <param name="legendBox">凡例の矩形</param>
+        public override void RenderLegend(IRenderContext rc, OxyRect legendBox)
+        {
+        }
+
+        /// <summary>
+        /// 軸を描画します
+        /// </summary>
+        /// <param name="rc">レンダリングコンテキスト</param>
         private void RenderAxes(IRenderContext rc)
         {
             var axisColor = OxyColors.Black;
@@ -332,6 +401,12 @@ namespace OxyPlotCustomProject
             }
         }
 
+        /// <summary>
+        /// 軸の目盛りを描画します
+        /// </summary>
+        /// <param name="rc">レンダリングコンテキスト</param>
+        /// <param name="axisIndex">軸のインデックス</param>
+        /// <param name="dimension">次元情報</param>
         private void RenderAxisTicks(IRenderContext rc, int axisIndex, ParallelDimension dimension)
         {
             double availableWidth = PlotModel.PlotArea.Width - (2 * HorizontalMargin);
@@ -363,6 +438,10 @@ namespace OxyPlotCustomProject
             }
         }
 
+        /// <summary>
+        /// データ線を描画します
+        /// </summary>
+        /// <param name="rc">レンダリングコンテキスト</param>
         private void RenderDataLines(IRenderContext rc)
         {
             // 上下に余白を設ける
@@ -370,7 +449,9 @@ namespace OxyPlotCustomProject
             double plotBottom = PlotModel.PlotArea.Bottom - PlotAreaMargin;
 
             if (Dimensions.Count == 0)
+            {
                 return;
+            }
 
             // 各次元の値の数を取得（すべて同じ数でなければならない）
             int valueCount = Dimensions[0].Values.Length;
@@ -386,7 +467,9 @@ namespace OxyPlotCustomProject
                     var dimension = Dimensions[dimIndex];
                     
                     if (lineIndex >= dimension.Values.Length)
+                    {
                         break;
+                    }
 
                     double value = dimension.Values[lineIndex];
                     double normalizedValue = (value - dimension.Range[0]) / (dimension.Range[1] - dimension.Range[0]);
@@ -417,6 +500,8 @@ namespace OxyPlotCustomProject
         /// <summary>
         /// 指定したライン番号の視覚的プロパティ（色、太さ）を取得します
         /// </summary>
+        /// <param name="lineIndex">ラインのインデックス</param>
+        /// <returns>色と太さのタプル</returns>
         private (OxyColor color, double thickness) GetLineVisualProperties(int lineIndex)
         {
             var baseColor = GetBaseLineColor(lineIndex);
@@ -448,6 +533,8 @@ namespace OxyPlotCustomProject
         /// <summary>
         /// 指定したライン番号の基本色を取得します
         /// </summary>
+        /// <param name="lineIndex">ラインのインデックス</param>
+        /// <returns>基本色</returns>
         private OxyColor GetBaseLineColor(int lineIndex)
         {
             // ColorValuesとColorScaleが設定されている場合は多色
@@ -464,16 +551,24 @@ namespace OxyPlotCustomProject
         /// <summary>
         /// カラースケールから基本色を補間します
         /// </summary>
+        /// <param name="value">補間する値</param>
+        /// <returns>補間された色</returns>
         private OxyColor InterpolateBaseColor(double value)
         {
             if (ColorScale == null || ColorScale.Count == 0)
+            {
                 return LineColor;
+            }
 
             // 値がカラースケールの範囲外の場合
             if (value <= ColorScale[0].Value)
+            {
                 return ColorScale[0].Color;
+            }
             if (value >= ColorScale[ColorScale.Count - 1].Value)
+            {
                 return ColorScale[ColorScale.Count - 1].Color;
+            }
 
             // 値が範囲内の場合、線形補間
             for (int i = 0; i < ColorScale.Count - 1; i++)
@@ -497,8 +592,12 @@ namespace OxyPlotCustomProject
         }
 
         /// <summary>
-        /// 点から線分までの距離を計算
+        /// 点から線分までの距離を計算します
         /// </summary>
+        /// <param name="point">点の座標</param>
+        /// <param name="lineStart">線分の開始点</param>
+        /// <param name="lineEnd">線分の終了点</param>
+        /// <returns>点から線分までの最短距離</returns>
         private double DistanceToLineSegment(ScreenPoint point, ScreenPoint lineStart, ScreenPoint lineEnd)
         {
             double dx = lineEnd.X - lineStart.X;
@@ -519,8 +618,9 @@ namespace OxyPlotCustomProject
         }
 
         /// <summary>
-        /// マウスクリック時の処理
+        /// マウスクリック時の処理を行います
         /// </summary>
+        /// <param name="point">クリックされたスクリーン座標</param>
         public void HandleMouseDown(ScreenPoint point)
         {
             var lineIndex = GetNearestLineIndex(point);
@@ -561,10 +661,14 @@ namespace OxyPlotCustomProject
         /// <summary>
         /// 指定した点に最も近い線のインデックスを取得します
         /// </summary>
+        /// <param name="point">スクリーン座標の点</param>
+        /// <returns>最も近い線のインデックス（見つからない場合は-1）</returns>
         private int GetNearestLineIndex(ScreenPoint point)
         {
             if (Dimensions == null || Dimensions.Count == 0)
+            {
                 return -1;
+            }
 
             double availableHeight = PlotModel.PlotArea.Height - (2 * PlotAreaMargin);
             double plotBottom = PlotModel.PlotArea.Bottom - PlotAreaMargin;
@@ -584,7 +688,9 @@ namespace OxyPlotCustomProject
                     var dimension = Dimensions[dimIndex];
                     
                     if (lineIndex >= dimension.Values.Length)
+                    {
                         break;
+                    }
 
                     double value = dimension.Values[lineIndex];
                     double normalizedValue = (value - dimension.Range[0]) / (dimension.Range[1] - dimension.Range[0]);
@@ -649,10 +755,14 @@ namespace OxyPlotCustomProject
         /// <summary>
         /// 指定した線のインデックスに対してツールチップテキストを作成します
         /// </summary>
+        /// <param name="lineIndex">線のインデックス</param>
+        /// <returns>ツールチップテキスト</returns>
         private string CreateTooltipText(int lineIndex)
         {
             if (Dimensions == null || Dimensions.Count == 0 || lineIndex < 0)
+            {
                 return $"Line {lineIndex}";
+            }
 
             var tooltipLines = new List<string>();
             tooltipLines.Add($"Data Point {lineIndex}");
@@ -679,29 +789,16 @@ namespace OxyPlotCustomProject
             return string.Join("\n", tooltipLines);
         }
 
-        protected override bool AreAxesRequired() => false;
-        protected override void EnsureAxes() { }
-        protected override bool IsUsing(OxyPlot.Axes.Axis axis) => false;
-        protected override void UpdateAxisMaxMin() { }
-        protected override void UpdateMaxMin() { }
-        protected override void SetDefaultValues() { }
-
-        /// <summary>
-        /// 凡例シンボルを描画します
-        /// </summary>
-        /// <param name="rc">レンダリングコンテキスト</param>
-        /// <param name="legendBox">凡例の矩形</param>
-        public override void RenderLegend(IRenderContext rc, OxyRect legendBox)
-        {
-        }
-
         /// <summary>
         /// 固定ツールチップを描画します
         /// </summary>
+        /// <param name="rc">レンダリングコンテキスト</param>
         private void RenderFixedTooltip(IRenderContext rc)
         {
             if (FixedTooltipInfo == null)
+            {
                 return;
+            }
 
             var lines = FixedTooltipInfo.Text.Split('\n');
             double lineHeight = TooltipLineHeight;
@@ -757,14 +854,22 @@ namespace OxyPlotCustomProject
             
             // 画面外に出ないように最終調整
             if (bestX + tooltipWidth > PlotModel.PlotArea.Right)
+            {
                 bestX = PlotModel.PlotArea.Right - tooltipWidth - TickLength;
+            }
             if (bestX < PlotModel.PlotArea.Left)
+            {
                 bestX = PlotModel.PlotArea.Left + TickLength;
+            }
                 
             if (bestY < PlotModel.PlotArea.Top)
+            {
                 bestY = clickY + TooltipOffset;
+            }
             if (bestY + tooltipHeight > PlotModel.PlotArea.Bottom)
+            {
                 bestY = PlotModel.PlotArea.Bottom - tooltipHeight - TickLength;
+            }
             
             double x = bestX;
             double y = bestY;
@@ -835,6 +940,11 @@ namespace OxyPlotCustomProject
         /// </summary>
         public string[]? TickText { get; set; }
 
+        /// <summary>
+        /// ParallelDimensionの新しいインスタンスを初期化します
+        /// </summary>
+        /// <param name="label">軸のラベル</param>
+        /// <param name="values">値の配列</param>
         public ParallelDimension(string label, double[] values)
         {
             Label = label;
@@ -854,6 +964,12 @@ namespace OxyPlotCustomProject
             }
         }
 
+        /// <summary>
+        /// ParallelDimensionの新しいインスタンスを初期化します（範囲指定版）
+        /// </summary>
+        /// <param name="label">軸のラベル</param>
+        /// <param name="values">値の配列</param>
+        /// <param name="range">値の範囲 [最小値, 最大値]</param>
         public ParallelDimension(string label, double[] values, double[] range)
         {
             Label = label;
@@ -877,6 +993,11 @@ namespace OxyPlotCustomProject
         /// </summary>
         public OxyColor Color { get; set; }
 
+        /// <summary>
+        /// ColorScalePointの新しいインスタンスを初期化します
+        /// </summary>
+        /// <param name="value">カラースケールの値</param>
+        /// <param name="color">その値での色</param>
         public ColorScalePoint(double value, OxyColor color)
         {
             Value = value;
