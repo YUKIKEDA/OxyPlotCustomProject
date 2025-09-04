@@ -1,7 +1,7 @@
 using OxyPlot;
 using OxyPlot.Series;
 
-namespace OxyPlotCustomProject
+namespace OxyPlotCustomProject.ScatterLineSeries
 {
     /// <summary>
     /// ScatterErrorSeries を継承し、点を線で接続して描画するカスタムシリーズです。
@@ -29,9 +29,9 @@ namespace OxyPlotCustomProject
         /// </summary>
         public CustomScatterLineSeries()
         {
-            this.LineColor = OxyColors.Automatic;
-            this.LineThickness = 1.0;
-            this.LineJoin = LineJoin.Round;
+            LineColor = OxyColors.Automatic;
+            LineThickness = 1.0;
+            LineJoin = LineJoin.Round;
         }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace OxyPlotCustomProject
         public override void Render(IRenderContext rc)
         {
             // ActualPointsList を使って連続する有効な点を接続するセグメントを構築する（データ順序を保持）
-            var actualPoints = this.ActualPointsList;
+            var actualPoints = ActualPointsList;
             if (actualPoints != null && actualPoints.Count > 0)
             {
                 var segments = new List<ScreenPoint>();
@@ -81,11 +81,11 @@ namespace OxyPlotCustomProject
                 {
                     rc.DrawLineSegments(
                         segments,
-                        this.GetSelectableColor(this.LineColor),
-                        this.LineThickness,
-                        this.EdgeRenderingMode,
+                        GetSelectableColor(LineColor),
+                        LineThickness,
+                        EdgeRenderingMode,
                         null,
-                        this.LineJoin);
+                        LineJoin);
                 }
             }
 

@@ -1,6 +1,7 @@
 using OxyPlot;
 using OxyPlot.Legends;
 using OxyPlot.Series;
+using OxyPlotCustomProject.ScatterLineSeries;
 
 namespace OxyPlotCustomProject
 {
