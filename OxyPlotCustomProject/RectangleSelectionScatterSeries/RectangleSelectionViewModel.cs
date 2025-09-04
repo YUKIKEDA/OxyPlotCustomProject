@@ -90,7 +90,7 @@ namespace OxyPlotCustomProject.RectangleSelectionScatterSeries
         /// <summary>
         /// 選択されたポイントの詳細情報
         /// </summary>
-        public ObservableCollection<PointInfo> SelectedPoints { get; } = new ObservableCollection<PointInfo>();
+        public ObservableCollection<PointInfo> SelectedPoints { get; } = [];
 
         /// <summary>
         /// 選択をクリアするコマンド
@@ -225,11 +225,8 @@ namespace OxyPlotCustomProject.RectangleSelectionScatterSeries
                 var x = random.NextDouble() * 100;
                 var y = random.NextDouble() * 100;
                 var size = 5.0 + random.NextDouble() * 5.0; // 5-10の範囲でサイズをランダム化
-                _scatterSeries.AddPoint(new ScatterPoint(x, y, size));
+                _scatterSeries.AddPointWithSelectionState(new ScatterPoint(x, y, size));
             }
-
-            // 選択状態を初期化
-            _scatterSeries.InitializePointSelectionStates();
 
             // プロットを更新
             _plotModel?.InvalidatePlot(true);

@@ -67,7 +67,7 @@ namespace OxyPlotCustomProject.RectangleSelectionScatterSeries
         /// <summary>
         /// 現在選択されているポイントのインデックス
         /// </summary>
-        private HashSet<int> _selectedPointIndices = new HashSet<int>();
+        private HashSet<int> _selectedPointIndices = [];
 
         /// <summary>
         /// 現在の矩形選択範囲（スクリーン座標）
@@ -77,7 +77,7 @@ namespace OxyPlotCustomProject.RectangleSelectionScatterSeries
         /// <summary>
         /// 永続的に表示する選択矩形のリスト（データ座標）
         /// </summary>
-        private List<DataRect> _persistentSelectionRectangles = new List<DataRect>();
+        private readonly List<DataRect> _persistentSelectionRectangles = [];
 
         /// <summary>
         /// 矩形選択が進行中かどうか
@@ -102,7 +102,7 @@ namespace OxyPlotCustomProject.RectangleSelectionScatterSeries
         /// <summary>
         /// 各ポイントの選択状態を管理する辞書
         /// </summary>
-        private Dictionary<int, bool> _pointSelectionStates = new Dictionary<int, bool>();
+        private readonly Dictionary<int, bool> _pointSelectionStates = [];
 
         /// <summary>
         /// 新しい <see cref="RectangleSelectionScatterSeries"/> のインスタンスを初期化します
@@ -117,26 +117,14 @@ namespace OxyPlotCustomProject.RectangleSelectionScatterSeries
         }
 
         /// <summary>
-        /// ポイントを追加します
+        /// ポイントを追加し、選択状態を初期化します
         /// </summary>
         /// <param name="point">追加するポイント</param>
-        public void AddPoint(ScatterPoint point)
+        public void AddPointWithSelectionState(ScatterPoint point)
         {
             Points.Add(point);
             var index = Points.Count - 1;
             _pointSelectionStates[index] = false;
-        }
-
-        /// <summary>
-        /// 初期化時にすべてのポイントの選択状態を設定します
-        /// </summary>
-        public void InitializePointSelectionStates()
-        {
-            _pointSelectionStates.Clear();
-            for (int i = 0; i < Points.Count; i++)
-            {
-                _pointSelectionStates[i] = false;
-            }
         }
 
         /// <summary>
@@ -146,7 +134,9 @@ namespace OxyPlotCustomProject.RectangleSelectionScatterSeries
         public void StartRectangleSelection(ScreenPoint startPoint)
         {
             if (!IsSelectionEnabled)
+            {
                 return;
+            }
 
             // 新しい矩形選択を開始する前に、既存の矩形と選択をクリア
             _persistentSelectionRectangles.Clear();
@@ -175,7 +165,9 @@ namespace OxyPlotCustomProject.RectangleSelectionScatterSeries
         public void UpdateRectangleSelection(ScreenPoint currentPoint)
         {
             if (!_isSelecting || !IsSelectionEnabled)
+            {
                 return;
+            }
 
             var minX = Math.Min(_selectionStartPoint.X, currentPoint.X);
             var minY = Math.Min(_selectionStartPoint.Y, currentPoint.Y);
@@ -203,7 +195,9 @@ namespace OxyPlotCustomProject.RectangleSelectionScatterSeries
         public void EndRectangleSelection(ScreenPoint endPoint)
         {
             if (!_isSelecting || !IsSelectionEnabled)
+            {
                 return;
+            }
 
             _isSelecting = false;
 
@@ -234,34 +228,6 @@ namespace OxyPlotCustomProject.RectangleSelectionScatterSeries
         }
 
         /// <summary>
-        /// 指定された矩形内のポイントを選択します
-        /// </summary>
-        /// <param name="rectangle">選択矩形（スクリーン座標）</param>
-        private void SelectPointsInRectangle(OxyRect rectangle)
-        {
-            var newSelectedIndices = new HashSet<int>();
-
-            for (int i = 0; i < Points.Count; i++)
-            {
-                var point = Points[i];
-                var screenPoint = this.Transform(point.X, point.Y);
-
-                if (rectangle.Contains(screenPoint.X, screenPoint.Y))
-                {
-                    newSelectedIndices.Add(i);
-                    _pointSelectionStates[i] = true;
-                }
-                else
-                {
-                    _pointSelectionStates[i] = false;
-                }
-            }
-
-            _selectedPointIndices = newSelectedIndices;
-            OnSelectionChanged(new SelectionChangedEventArgs(_selectedPointIndices.ToList()));
-        }
-
-        /// <summary>
         /// 指定されたデータ座標矩形内のポイントを選択します
         /// </summary>
         /// <param name="dataRect">選択矩形（データ座標）</param>
@@ -286,36 +252,6 @@ namespace OxyPlotCustomProject.RectangleSelectionScatterSeries
 
             _selectedPointIndices = newSelectedIndices;
             OnSelectionChanged(new SelectionChangedEventArgs(_selectedPointIndices.ToList()));
-        }
-
-        /// <summary>
-        /// 指定されたインデックスのポイントを選択状態にします
-        /// </summary>
-        /// <param name="index">ポイントのインデックス</param>
-        public void SelectPoint(int index)
-        {
-            if (index >= 0 && index < Points.Count)
-            {
-                _selectedPointIndices.Add(index);
-                _pointSelectionStates[index] = true;
-                            OnSelectionChanged(new SelectionChangedEventArgs(_selectedPointIndices.ToList()));
-            PlotModel?.InvalidatePlot(false);
-            }
-        }
-
-        /// <summary>
-        /// 指定されたインデックスのポイントの選択を解除します
-        /// </summary>
-        /// <param name="index">ポイントのインデックス</param>
-        public void DeselectPoint(int index)
-        {
-            if (index >= 0 && index < Points.Count)
-            {
-                _selectedPointIndices.Remove(index);
-                _pointSelectionStates[index] = false;
-                            OnSelectionChanged(new SelectionChangedEventArgs(_selectedPointIndices.ToList()));
-            PlotModel?.InvalidatePlot(false);
-            }
         }
 
         /// <summary>
@@ -375,18 +311,24 @@ namespace OxyPlotCustomProject.RectangleSelectionScatterSeries
         public override void Render(IRenderContext rc)
         {
             if (PlotModel == null)
+            {
                 return;
+            }
 
             var actualPoints = ActualPointsList;
             if (actualPoints == null || actualPoints.Count == 0)
+            {
                 return;
+            }
 
             // 各ポイントを描画
             for (int i = 0; i < actualPoints.Count; i++)
             {
                 var point = actualPoints[i];
                 if (point == null || double.IsNaN(point.X) || double.IsNaN(point.Y))
+                {
                     continue;
+                }
 
                 var screenPoint = this.Transform(point.X, point.Y);
                 
