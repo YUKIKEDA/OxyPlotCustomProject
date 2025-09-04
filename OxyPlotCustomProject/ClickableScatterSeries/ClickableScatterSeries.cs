@@ -71,6 +71,11 @@ namespace OxyPlotCustomProject.ClickableScatterSeries
         private readonly Dictionary<int, OxyColor> _pointColors = [];
 
         /// <summary>
+        /// 各点のサイズ情報を保持する辞書
+        /// </summary>
+        private readonly Dictionary<int, double> _pointSizes = [];
+
+        /// <summary>
         /// 新しい <see cref="ClickableScatterSeries"/> のインスタンスを初期化します
         /// </summary>
         public ClickableScatterSeries()
@@ -91,13 +96,16 @@ namespace OxyPlotCustomProject.ClickableScatterSeries
             // 既存の点をクリア
             Points.Clear();
             _pointColors.Clear();
+            _pointSizes.Clear();
             _clickedPointIndex = -1;
             
             // 初期点を追加
             foreach (var point in initialPoints)
             {
                 Points.Add(point);
-                _pointColors[Points.Count - 1] = MarkerFill;
+                var index = Points.Count - 1;
+                _pointColors[index] = MarkerFill;
+                _pointSizes[index] = MarkerSize;
             }
             
             // 初期点の数を設定
@@ -113,6 +121,17 @@ namespace OxyPlotCustomProject.ClickableScatterSeries
         {
             // 初期点は青色、それ以降は赤色
             return index < _initialPointCount ? MarkerFill : NewPointMarkerColor;
+        }
+
+        /// <summary>
+        /// 指定されたインデックスの点の元のサイズを取得します
+        /// </summary>
+        /// <param name="index">点のインデックス</param>
+        /// <returns>元のサイズ</returns>
+        private double GetOriginalPointSize(int index)
+        {
+            // 初期点は標準サイズ、それ以降は新しい点のサイズ
+            return index < _initialPointCount ? MarkerSize : NewPointMarkerSize;
         }
 
         /// <summary>
@@ -157,23 +176,28 @@ namespace OxyPlotCustomProject.ClickableScatterSeries
                         return true;
                     }
                     
-                    // 前回クリックされた点の色をリセット（元の色に戻す）
+                    // 前回クリックされた点の色とサイズをリセット（元に戻す）
                     if (_clickedPointIndex >= 0 && _clickedPointIndex < Points.Count)
                     {
-                        // 元の色を取得（初期点は青、追加点は赤）
+                        // 元の色とサイズを取得
                         var originalColor = GetOriginalPointColor(_clickedPointIndex);
+                        var originalSize = GetOriginalPointSize(_clickedPointIndex);
                         _pointColors[_clickedPointIndex] = originalColor;
+                        _pointSizes[_clickedPointIndex] = originalSize;
                     }
                     
-                    // 新しいクリックされた点の色を保存
+                    // 新しいクリックされた点の色とサイズを保存
                     if (!_pointColors.ContainsKey(clickedIndex))
                     {
                         var originalColor = GetOriginalPointColor(clickedIndex);
+                        var originalSize = GetOriginalPointSize(clickedIndex);
                         _pointColors[clickedIndex] = originalColor;
+                        _pointSizes[clickedIndex] = originalSize;
                     }
                     
-                    // クリックされた点の色を変更
+                    // クリックされた点の色とサイズを変更
                     _pointColors[clickedIndex] = ClickedPointMarkerColor;
+                    _pointSizes[clickedIndex] = ClickedPointMarkerSize;
                     
                     // 新しいクリックされた点のインデックスを保存
                     _clickedPointIndex = clickedIndex;
@@ -192,9 +216,10 @@ namespace OxyPlotCustomProject.ClickableScatterSeries
                 var newPoint = new ScatterPoint(dataPoint.X, dataPoint.Y, NewPointMarkerSize);
                 Points.Add(newPoint);
                 
-                // 新しい点の色を初期化（新しく追加された点は赤色）
+                // 新しい点の色とサイズを初期化（新しく追加された点は赤色、サイズはNewPointMarkerSize）
                 var newIndex = Points.Count - 1;
                 _pointColors[newIndex] = NewPointMarkerColor;
+                _pointSizes[newIndex] = NewPointMarkerSize;
                 
                 // イベントを発生
                 OnPointAdded(new PointAddedEventArgs(newPoint));
@@ -313,14 +338,9 @@ namespace OxyPlotCustomProject.ClickableScatterSeries
 
                 var screenPoint = this.Transform(point.X, point.Y);
                 
-                // 点の色を決定
-                var pointColor = _pointColors.TryGetValue(i, out OxyColor value) ? value : GetOriginalPointColor(i);
-                var pointSize = MarkerSize;
-                
-                if (i == _clickedPointIndex)
-                {
-                    pointSize = ClickedPointMarkerSize;
-                }
+                // 点の色とサイズを決定
+                var pointColor = _pointColors.TryGetValue(i, out OxyColor colorValue) ? colorValue : GetOriginalPointColor(i);
+                var pointSize = _pointSizes.TryGetValue(i, out double sizeValue) ? sizeValue : GetOriginalPointSize(i);
 
                 // マーカーを描画
                 rc.DrawMarker(
