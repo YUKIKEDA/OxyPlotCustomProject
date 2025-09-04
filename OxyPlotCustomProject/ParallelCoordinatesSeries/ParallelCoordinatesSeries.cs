@@ -1,10 +1,7 @@
 using OxyPlot;
 using OxyPlot.Series;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
-namespace OxyPlotCustomProject
+namespace OxyPlotCustomProject.ParallelCoordinatesSeries
 {
     /// <summary>
     /// ツールチップテキストを生成するデリゲート
@@ -337,9 +334,9 @@ namespace OxyPlotCustomProject
             {
                 var dimension = Dimensions[i];
                 // 水平方向の利用可能な幅を計算（左右の余白を除く）
-                double availableWidth = PlotModel.PlotArea.Width - (2 * HorizontalMargin);
+                double availableWidth = PlotModel.PlotArea.Width - 2 * HorizontalMargin;
                 // 各軸のX座標を計算（軸間隔を等分に配置）
-                double x = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * i / (Dimensions.Count - 1));
+                double x = PlotModel.PlotArea.Left + HorizontalMargin + availableWidth * i / (Dimensions.Count - 1);
 
                 // 軸の垂直線を描画（余白を考慮）
                 var topPoint = new ScreenPoint(x, PlotModel.PlotArea.Top + PlotAreaMargin);
@@ -375,10 +372,10 @@ namespace OxyPlotCustomProject
                     OxyColors.Black, 
                     fontFamily: FontFamily, 
                     fontSize: AxisTitleFontSize, 
-                    fontWeight: OxyPlot.FontWeights.Bold, 
+                    fontWeight: FontWeights.Bold, 
                     rotation: 0, 
-                    horizontalAlignment: OxyPlot.HorizontalAlignment.Center, 
-                    verticalAlignment: OxyPlot.VerticalAlignment.Bottom
+                    horizontalAlignment: HorizontalAlignment.Center, 
+                    verticalAlignment: VerticalAlignment.Bottom
                 );
             }
 
@@ -393,10 +390,10 @@ namespace OxyPlotCustomProject
                     OxyColors.Gray, 
                     fontFamily: FontFamily, 
                     fontSize: AxisLabelFontSize, 
-                    fontWeight: OxyPlot.FontWeights.Normal, 
+                    fontWeight: FontWeights.Normal, 
                     rotation: 0, 
-                    horizontalAlignment: OxyPlot.HorizontalAlignment.Center, 
-                    verticalAlignment: OxyPlot.VerticalAlignment.Top);
+                    horizontalAlignment: HorizontalAlignment.Center, 
+                    verticalAlignment: VerticalAlignment.Top);
             }
         }
 
@@ -409,12 +406,12 @@ namespace OxyPlotCustomProject
         private void RenderAxisTicks(IRenderContext rc, int axisIndex, ParallelDimension dimension)
         {
             // 水平方向の利用可能な幅を計算（左右の余白を除く）
-            double availableWidth = PlotModel.PlotArea.Width - (2 * HorizontalMargin);
+            double availableWidth = PlotModel.PlotArea.Width - 2 * HorizontalMargin;
             // 指定された軸のX座標を計算（軸間隔を等分に配置）
-            double x = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * axisIndex / (Dimensions.Count - 1));
+            double x = PlotModel.PlotArea.Left + HorizontalMargin + availableWidth * axisIndex / (Dimensions.Count - 1);
             
             // 垂直方向の利用可能な高さを計算（上下の余白を除く）
-            double availableHeight = PlotModel.PlotArea.Height - (2 * PlotAreaMargin);
+            double availableHeight = PlotModel.PlotArea.Height - 2 * PlotAreaMargin;
             // プロット領域の上下端の座標を計算
             double plotTop = PlotModel.PlotArea.Top + PlotAreaMargin;
             double plotBottom = PlotModel.PlotArea.Bottom - PlotAreaMargin;
@@ -448,10 +445,10 @@ namespace OxyPlotCustomProject
                     OxyColors.Black, 
                     fontFamily: FontFamily, 
                     fontSize: AxisLabelFontSize, 
-                    fontWeight: OxyPlot.FontWeights.Normal, 
+                    fontWeight: FontWeights.Normal, 
                     rotation: 0, 
-                    horizontalAlignment: OxyPlot.HorizontalAlignment.Left, 
-                    verticalAlignment: OxyPlot.VerticalAlignment.Middle
+                    horizontalAlignment: HorizontalAlignment.Left, 
+                    verticalAlignment: VerticalAlignment.Middle
                 );
             }
         }
@@ -463,7 +460,7 @@ namespace OxyPlotCustomProject
         private void RenderDataLines(IRenderContext rc)
         {
             // 上下に余白を設ける
-            double availableHeight = PlotModel.PlotArea.Height - (2 * PlotAreaMargin);
+            double availableHeight = PlotModel.PlotArea.Height - 2 * PlotAreaMargin;
             double plotBottom = PlotModel.PlotArea.Bottom - PlotAreaMargin;
 
             if (Dimensions.Count == 0)
@@ -495,8 +492,8 @@ namespace OxyPlotCustomProject
                     
                     // Y座標を画面座標に変換（余白を考慮）
                     double y = plotBottom - normalizedValue * availableHeight;
-                    double availableWidth = PlotModel.PlotArea.Width - (2 * HorizontalMargin);
-                    double x = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * dimIndex / (Dimensions.Count - 1));
+                    double availableWidth = PlotModel.PlotArea.Width - 2 * HorizontalMargin;
+                    double x = PlotModel.PlotArea.Left + HorizontalMargin + availableWidth * dimIndex / (Dimensions.Count - 1);
 
                     screenPoints.Add(new ScreenPoint(x, y));
                 }
@@ -635,7 +632,7 @@ namespace OxyPlotCustomProject
             double maxWidth = 0;
             foreach (var line in lines)
             {
-                var size = rc.MeasureText(line, FontFamily, TooltipFontSize, OxyPlot.FontWeights.Normal);
+                var size = rc.MeasureText(line, FontFamily, TooltipFontSize, FontWeights.Normal);
                 maxWidth = Math.Max(maxWidth, size.Width);
             }
 
@@ -701,11 +698,11 @@ namespace OxyPlotCustomProject
             {
                 // プロットエリア内で軸が配置される幅を計算
                 // 左右のマージンを除いた利用可能な幅
-                double availableWidth = PlotModel.PlotArea.Width - (2 * HorizontalMargin);
+                double availableWidth = PlotModel.PlotArea.Width - 2 * HorizontalMargin;
                 
                 // 現在の軸のX座標を計算
                 // 軸は等間隔で配置される（0番目から最後まで均等に分散）
-                double axisX = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * dimIndex / (Dimensions.Count - 1));
+                double axisX = PlotModel.PlotArea.Left + HorizontalMargin + availableWidth * dimIndex / (Dimensions.Count - 1);
                 
                 // ツールチップの中心と軸の距離を計算
                 // ツールチップの中心位置 = bestX + tooltipWidth / 2
@@ -719,14 +716,14 @@ namespace OxyPlotCustomProject
                     {
                         // 次の軸との中間点に移動
                         // 現在の軸と次の軸の間の中央にツールチップを配置
-                        double nextAxisX = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * (dimIndex + 1) / (Dimensions.Count - 1));
+                        double nextAxisX = PlotModel.PlotArea.Left + HorizontalMargin + availableWidth * (dimIndex + 1) / (Dimensions.Count - 1);
                         bestX = (axisX + nextAxisX - tooltipWidth) / 2;
                     }
                     else if (dimIndex > 0)
                     {
                         // 前の軸との中間点に移動
                         // 最後の軸の場合は、前の軸との間の中央に配置
-                        double prevAxisX = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * (dimIndex - 1) / (Dimensions.Count - 1));
+                        double prevAxisX = PlotModel.PlotArea.Left + HorizontalMargin + availableWidth * (dimIndex - 1) / (Dimensions.Count - 1);
                         bestX = (prevAxisX + axisX - tooltipWidth) / 2;
                     }
                 }
@@ -805,7 +802,7 @@ namespace OxyPlotCustomProject
                 return -1;
             }
 
-            double availableHeight = PlotModel.PlotArea.Height - (2 * PlotAreaMargin);
+            double availableHeight = PlotModel.PlotArea.Height - 2 * PlotAreaMargin;
             double plotBottom = PlotModel.PlotArea.Bottom - PlotAreaMargin;
 
             int valueCount = Dimensions[0].Values.Length;
@@ -831,8 +828,8 @@ namespace OxyPlotCustomProject
                     double normalizedValue = (value - dimension.Range[0]) / (dimension.Range[1] - dimension.Range[0]);
                     
                     double y = plotBottom - normalizedValue * availableHeight;
-                    double availableWidth = PlotModel.PlotArea.Width - (2 * HorizontalMargin);
-                    double x = PlotModel.PlotArea.Left + HorizontalMargin + (availableWidth * dimIndex / (Dimensions.Count - 1));
+                    double availableWidth = PlotModel.PlotArea.Width - 2 * HorizontalMargin;
+                    double x = PlotModel.PlotArea.Left + HorizontalMargin + availableWidth * dimIndex / (Dimensions.Count - 1);
 
                     screenPoints.Add(new ScreenPoint(x, y));
                 }
@@ -1187,12 +1184,12 @@ namespace OxyPlotCustomProject
         /// <summary>
         /// 水平方向のテキストアライメント
         /// </summary>
-        public OxyPlot.HorizontalAlignment HorizontalAlignment { get; set; }
+        public HorizontalAlignment HorizontalAlignment { get; set; }
 
         /// <summary>
         /// 垂直方向のテキストアライメント
         /// </summary>
-        public OxyPlot.VerticalAlignment VerticalAlignment { get; set; }
+        public VerticalAlignment VerticalAlignment { get; set; }
 
         /// <summary>
         /// TooltipStyleの新しいインスタンスを初期化します（デフォルト値で）
@@ -1204,8 +1201,8 @@ namespace OxyPlotCustomProject
             BorderThickness = 1.0;
             TextColor = OxyColors.Black;
             FontWeight = 400; // Normal weight
-            HorizontalAlignment = OxyPlot.HorizontalAlignment.Left;
-            VerticalAlignment = OxyPlot.VerticalAlignment.Top;
+            HorizontalAlignment = HorizontalAlignment.Left;
+            VerticalAlignment = VerticalAlignment.Top;
         }
     }
 }

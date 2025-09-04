@@ -1,13 +1,8 @@
-using OxyPlot;
-using OxyPlot.Legends;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Windows.Input;
-using System.Windows;
+using OxyPlot;
 
-namespace OxyPlotCustomProject
+namespace OxyPlotCustomProject.ParallelCoordinatesSeries
 {
     public class ParallelCoordinatesViewModel : INotifyPropertyChanged
     {
@@ -28,7 +23,7 @@ namespace OxyPlotCustomProject
 
         public ParallelCoordinatesViewModel()
         {
-            this.PlotModel = new PlotModel { Title = "Parallel Coordinates Plot Demo" };
+            PlotModel = new PlotModel { Title = "Parallel Coordinates Plot Demo" };
             
             // コマンドを初期化
             ResetCommand = new RelayCommand(ResetHighlightAndSelection);
@@ -115,7 +110,7 @@ namespace OxyPlotCustomProject
             };
 
             _currentSeries = series;
-            this.PlotModel.Series.Add(series);
+            PlotModel.Series.Add(series);
         }
 
         /// <summary>
@@ -123,7 +118,7 @@ namespace OxyPlotCustomProject
         /// </summary>
         public void ResetHighlightAndSelection()
         {
-            var parallelSeries = this.PlotModel.Series.OfType<ParallelCoordinatesSeries>().FirstOrDefault();
+            var parallelSeries = PlotModel.Series.OfType<ParallelCoordinatesSeries>().FirstOrDefault();
             if (parallelSeries != null)
             {
                 parallelSeries.ResetHighlightAndSelection();
@@ -136,7 +131,7 @@ namespace OxyPlotCustomProject
         /// <param name="screenPoint">スクリーン座標</param>
         private void HandleMouseMove(ScreenPoint screenPoint)
         {
-            var parallelSeries = this.PlotModel.Series.OfType<ParallelCoordinatesSeries>().FirstOrDefault();
+            var parallelSeries = PlotModel.Series.OfType<ParallelCoordinatesSeries>().FirstOrDefault();
             if (parallelSeries != null)
             {
                 parallelSeries.GetNearestPoint(screenPoint, false);
@@ -149,7 +144,7 @@ namespace OxyPlotCustomProject
         /// <param name="screenPoint">スクリーン座標</param>
         private void HandleMouseDown(ScreenPoint screenPoint)
         {
-            var parallelSeries = this.PlotModel.Series.OfType<ParallelCoordinatesSeries>().FirstOrDefault();
+            var parallelSeries = PlotModel.Series.OfType<ParallelCoordinatesSeries>().FirstOrDefault();
             if (parallelSeries != null)
             {
                 parallelSeries.HandleMouseDown(screenPoint);

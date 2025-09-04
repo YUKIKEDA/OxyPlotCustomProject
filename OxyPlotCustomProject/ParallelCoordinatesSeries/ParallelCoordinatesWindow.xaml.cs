@@ -1,4 +1,5 @@
 using System.Windows;
+using OxyPlotCustomProject.ParallelCoordinatesSeries;
 
 namespace OxyPlotCustomProject
 {

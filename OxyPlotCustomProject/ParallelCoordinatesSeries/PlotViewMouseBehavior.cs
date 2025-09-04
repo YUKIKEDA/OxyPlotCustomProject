@@ -3,7 +3,7 @@ using System.Windows.Input;
 using Microsoft.Xaml.Behaviors;
 using OxyPlot;
 
-namespace OxyPlotCustomProject
+namespace OxyPlotCustomProject.ParallelCoordinatesSeries
 {
     /// <summary>
     /// PlotViewのマウスイベントをViewModelのコマンドにバインドするビヘイビア

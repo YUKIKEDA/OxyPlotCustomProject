@@ -2,11 +2,12 @@
     x:Class="OxyPlotCustomProject.ParallelCoordinatesWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behavior="clr-namespace:OxyPlotCustomProject.ParallelCoordinatesSeries"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:local="clr-namespace:OxyPlotCustomProject"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:oxy="http://oxyplot.org/wpf"
-    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
     Title="Parallel Coordinates Plot"
     Width="1000"
     Height="600"
@@ -17,8 +18,8 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        
-        <!-- タイトル部分 -->
+
+        <!--  タイトル部分  -->
         <TextBlock
             Grid.Row="0"
             Margin="20,10"
@@ -26,38 +27,38 @@
             FontSize="16"
             FontWeight="Bold"
             Text="Parallel Coordinates Plot - Iris Dataset Sample" />
-        
-        <!-- コントロール部分 -->
+
+        <!--  コントロール部分  -->
         <Grid Grid.Row="1" Margin="10,5">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            
-            <!-- 操作説明とリセットボタン -->
-            <StackPanel 
+
+            <!--  操作説明とリセットボタン  -->
+            <StackPanel
                 Grid.Row="0"
-                Orientation="Horizontal"
-                HorizontalAlignment="Center">
-                
+                HorizontalAlignment="Center"
+                Orientation="Horizontal">
+
                 <TextBlock
-                    Text="Instructions: Hover to highlight, click to select/deselect lines"
+                    Margin="0,0,20,0"
                     VerticalAlignment="Center"
                     FontSize="11"
                     Foreground="Gray"
-                    Margin="0,0,20,0" />
-                    
+                    Text="Instructions: Hover to highlight, click to select/deselect lines" />
+
                 <Button
                     x:Name="resetButton"
-                    Content="Reset Selection"
                     Padding="15,8"
                     Background="LightCoral"
-                    Foreground="White"
-                    FontWeight="Bold"
                     BorderBrush="DarkRed"
                     BorderThickness="1"
                     Command="{Binding ResetCommand}"
-                    Cursor="Hand">
+                    Content="Reset Selection"
+                    Cursor="Hand"
+                    FontWeight="Bold"
+                    Foreground="White">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Style.Triggers>
@@ -69,31 +70,31 @@
                     </Button.Style>
                 </Button>
             </StackPanel>
-            
-            <!-- ツールチップカスタマイズ用ボタン -->
-            <StackPanel 
+
+            <!--  ツールチップカスタマイズ用ボタン  -->
+            <StackPanel
                 Grid.Row="1"
-                Orientation="Horizontal"
+                Margin="0,10,0,0"
                 HorizontalAlignment="Center"
-                Margin="0,10,0,0">
-                
+                Orientation="Horizontal">
+
                 <TextBlock
-                    Text="Tooltip Customization:"
+                    Margin="0,0,15,0"
                     VerticalAlignment="Center"
                     FontSize="12"
                     FontWeight="Bold"
-                    Margin="0,0,15,0" />
-                
+                    Text="Tooltip Customization:" />
+
                 <Button
-                    Content="Default Tooltip"
+                    Margin="5,0"
                     Padding="10,6"
                     Background="LightBlue"
-                    Foreground="DarkBlue"
                     BorderBrush="DarkBlue"
                     BorderThickness="1"
                     Command="{Binding UseDefaultTooltipCommand}"
-                    Margin="5,0"
-                    Cursor="Hand">
+                    Content="Default Tooltip"
+                    Cursor="Hand"
+                    Foreground="DarkBlue">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Style.Triggers>
@@ -104,17 +105,17 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                
+
                 <Button
-                    Content="Custom Tooltip (Japanese)"
+                    Margin="5,0"
                     Padding="10,6"
                     Background="LightGreen"
-                    Foreground="DarkGreen"
                     BorderBrush="DarkGreen"
                     BorderThickness="1"
                     Command="{Binding UseCustomTooltipCommand}"
-                    Margin="5,0"
-                    Cursor="Hand">
+                    Content="Custom Tooltip (Japanese)"
+                    Cursor="Hand"
+                    Foreground="DarkGreen">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Style.Triggers>
@@ -125,17 +126,17 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                
+
                 <Button
-                    Content="Change Style (Dark)"
+                    Margin="5,0"
                     Padding="10,6"
                     Background="Gold"
-                    Foreground="DarkOrange"
                     BorderBrush="DarkOrange"
                     BorderThickness="1"
                     Command="{Binding ChangeTooltipStyleCommand}"
-                    Margin="5,0"
-                    Cursor="Hand">
+                    Content="Change Style (Dark)"
+                    Cursor="Hand"
+                    Foreground="DarkOrange">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Style.Triggers>
@@ -148,17 +149,15 @@
                 </Button>
             </StackPanel>
         </Grid>
-        
-        <!-- PlotView -->
+
+        <!--  PlotView  -->
         <oxy:PlotView
             x:Name="plotView"
             Grid.Row="2"
             Margin="10"
             Model="{Binding PlotModel}">
             <i:Interaction.Behaviors>
-                <local:PlotViewMouseBehavior 
-                    MouseMoveCommand="{Binding MouseMoveCommand}"
-                    MouseDownCommand="{Binding MouseDownCommand}" />
+                <behavior:PlotViewMouseBehavior MouseDownCommand="{Binding MouseDownCommand}" MouseMoveCommand="{Binding MouseMoveCommand}" />
             </i:Interaction.Behaviors>
         </oxy:PlotView>
     </Grid>
