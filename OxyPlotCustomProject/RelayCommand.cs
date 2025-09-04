@@ -32,6 +32,14 @@ namespace OxyPlotCustomProject
         {
             _execute();
         }
+
+        /// <summary>
+        /// CanExecuteChangedイベントを発生させます
+        /// </summary>
+        public void RaiseCanExecuteChanged()
+        {
+            CommandManager.InvalidateRequerySuggested();
+        }
     }
 
     /// <summary>
@@ -74,6 +82,14 @@ namespace OxyPlotCustomProject
             {
                 _execute(default(T)!);
             }
+        }
+
+        /// <summary>
+        /// CanExecuteChangedイベントを発生させます
+        /// </summary>
+        public void RaiseCanExecuteChanged()
+        {
+            CommandManager.InvalidateRequerySuggested();
         }
     }
 }

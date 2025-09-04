@@ -18,5 +18,11 @@ namespace OxyPlotCustomProject
             var parallelCoordinatesWindow = new ParallelCoordinatesWindow();
             parallelCoordinatesWindow.Show();
         }
+
+        private void OpenClickableScatterPlot_Click(object sender, RoutedEventArgs e)
+        {
+            var clickableScatterWindow = new ClickableScatterWindow();
+            clickableScatterWindow.Show();
+        }
     }
 }

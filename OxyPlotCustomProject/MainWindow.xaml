@@ -16,15 +16,25 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         
-        <!--  Button to open Parallel Coordinates Plot  -->
-        <Button
+        <!--  Buttons to open different plot windows  -->
+        <StackPanel
             Grid.Row="0"
             Margin="10"
-            Padding="10,5"
-            HorizontalAlignment="Center"
-            Click="OpenParallelCoordinatesPlot_Click"
-            Content="Open Parallel Coordinates Plot"
-            FontSize="14" />
+            Orientation="Horizontal"
+            HorizontalAlignment="Center">
+            <Button
+                Margin="5"
+                Padding="10,5"
+                Click="OpenParallelCoordinatesPlot_Click"
+                Content="Open Parallel Coordinates Plot"
+                FontSize="14" />
+            <Button
+                Margin="5"
+                Padding="10,5"
+                Click="OpenClickableScatterPlot_Click"
+                Content="Open Clickable Scatter Plot"
+                FontSize="14" />
+        </StackPanel>
         
         <!--  PlotView bound to the ViewModel's PlotModel  -->
         <oxy:PlotView Grid.Row="1" Model="{Binding PlotModel}" />
