@@ -15,8 +15,8 @@ namespace OxyPlotCustomProject
     /// </summary>
     public class RectangleSelectionViewModel : INotifyPropertyChanged, IDisposable
     {
-        private PlotModel _plotModel;
-        private RectangleSelectionScatterSeries _scatterSeries;
+        private PlotModel? _plotModel;
+        private RectangleSelectionScatterSeries? _scatterSeries;
         private string _statusText = "Shift + マウスドラッグで矩形選択してください（1つの矩形のみ）";
         private int _selectedPointCount = 0;
         private bool _isSelectionEnabled = true;
@@ -24,7 +24,7 @@ namespace OxyPlotCustomProject
         /// <summary>
         /// プロットモデル
         /// </summary>
-        public PlotModel PlotModel
+        public PlotModel? PlotModel
         {
             get => _plotModel;
             set
@@ -37,7 +37,7 @@ namespace OxyPlotCustomProject
         /// <summary>
         /// 散布図シリーズ
         /// </summary>
-        public RectangleSelectionScatterSeries ScatterSeries
+        public RectangleSelectionScatterSeries? ScatterSeries
         {
             get => _scatterSeries;
             set
@@ -98,27 +98,27 @@ namespace OxyPlotCustomProject
         /// <summary>
         /// 選択をクリアするコマンド
         /// </summary>
-        public ICommand ClearSelectionCommand { get; private set; }
+        public ICommand? ClearSelectionCommand { get; private set; }
 
         /// <summary>
         /// サンプルデータを生成するコマンド
         /// </summary>
-        public ICommand GenerateSampleDataCommand { get; private set; }
+        public ICommand? GenerateSampleDataCommand { get; private set; }
 
         /// <summary>
         /// 選択機能の有効/無効を切り替えるコマンド
         /// </summary>
-        public ICommand ToggleSelectionCommand { get; private set; }
+        public ICommand? ToggleSelectionCommand { get; private set; }
 
         /// <summary>
         /// 永続的な矩形をクリアするコマンド
         /// </summary>
-        public ICommand ClearRectanglesCommand { get; private set; }
+        public ICommand? ClearRectanglesCommand { get; private set; }
 
         /// <summary>
         /// 永続的な矩形の表示/非表示を切り替えるコマンド
         /// </summary>
-        public ICommand ToggleRectanglesCommand { get; private set; }
+        public ICommand? ToggleRectanglesCommand { get; private set; }
 
         /// <summary>
         /// 新しい <see cref="RectangleSelectionViewModel"/> のインスタンスを初期化します
@@ -235,7 +235,7 @@ namespace OxyPlotCustomProject
             _scatterSeries.InitializePointSelectionStates();
 
             // プロットを更新
-            _plotModel.InvalidatePlot(true);
+            _plotModel?.InvalidatePlot(true);
             StatusText = "サンプルデータを生成しました。Shift + マウスドラッグで矩形選択してください（1つの矩形のみ）。";
         }
 
@@ -252,7 +252,7 @@ namespace OxyPlotCustomProject
             SelectedPoints.Clear();
             foreach (var index in e.SelectedIndices)
             {
-                if (index < _scatterSeries.Points.Count)
+                if (_scatterSeries != null && index < _scatterSeries.Points.Count)
                 {
                     var point = _scatterSeries.Points[index];
                     SelectedPoints.Add(new PointInfo
