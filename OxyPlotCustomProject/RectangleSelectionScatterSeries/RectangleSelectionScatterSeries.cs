@@ -1,10 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using OxyPlot;
 using OxyPlot.Series;
 
-namespace OxyPlotCustomProject
+namespace OxyPlotCustomProject.RectangleSelectionScatterSeries
 {
     /// <summary>
     /// 矩形範囲選択機能付きの散布図シリーズ
@@ -112,11 +109,11 @@ namespace OxyPlotCustomProject
         /// </summary>
         public RectangleSelectionScatterSeries()
         {
-            this.MarkerType = MarkerType.Circle;
-            this.MarkerSize = this.UnselectedPointSize;
-            this.MarkerFill = this.UnselectedPointColor;
-            this.MarkerStroke = OxyColors.Black;
-            this.MarkerStrokeThickness = 1.0;
+            MarkerType = MarkerType.Circle;
+            MarkerSize = UnselectedPointSize;
+            MarkerFill = UnselectedPointColor;
+            MarkerStroke = OxyColors.Black;
+            MarkerStrokeThickness = 1.0;
         }
 
         /// <summary>
@@ -125,8 +122,8 @@ namespace OxyPlotCustomProject
         /// <param name="point">追加するポイント</param>
         public void AddPoint(ScatterPoint point)
         {
-            this.Points.Add(point);
-            var index = this.Points.Count - 1;
+            Points.Add(point);
+            var index = Points.Count - 1;
             _pointSelectionStates[index] = false;
         }
 
@@ -136,7 +133,7 @@ namespace OxyPlotCustomProject
         public void InitializePointSelectionStates()
         {
             _pointSelectionStates.Clear();
-            for (int i = 0; i < this.Points.Count; i++)
+            for (int i = 0; i < Points.Count; i++)
             {
                 _pointSelectionStates[i] = false;
             }
@@ -148,7 +145,7 @@ namespace OxyPlotCustomProject
         /// <param name="startPoint">選択開始点（スクリーン座標）</param>
         public void StartRectangleSelection(ScreenPoint startPoint)
         {
-            if (!this.IsSelectionEnabled)
+            if (!IsSelectionEnabled)
                 return;
 
             // 新しい矩形選択を開始する前に、既存の矩形と選択をクリア
@@ -163,12 +160,12 @@ namespace OxyPlotCustomProject
             _selectionStartPoint = startPoint;
             
             // スクリーン座標をデータ座標に変換
-            _selectionStartDataPoint = this.InverseTransform(startPoint);
+            _selectionStartDataPoint = InverseTransform(startPoint);
             
             _currentSelectionRectangle = new OxyRect(startPoint.X, startPoint.Y, 0, 0);
 
             OnRectangleSelectionStarted(new RectangleSelectionEventArgs(startPoint));
-            this.PlotModel?.InvalidatePlot(false);
+            PlotModel?.InvalidatePlot(false);
         }
 
         /// <summary>
@@ -177,7 +174,7 @@ namespace OxyPlotCustomProject
         /// <param name="currentPoint">現在のマウス位置（スクリーン座標）</param>
         public void UpdateRectangleSelection(ScreenPoint currentPoint)
         {
-            if (!_isSelecting || !this.IsSelectionEnabled)
+            if (!_isSelecting || !IsSelectionEnabled)
                 return;
 
             var minX = Math.Min(_selectionStartPoint.X, currentPoint.X);
@@ -195,7 +192,7 @@ namespace OxyPlotCustomProject
                 Math.Abs(_currentSelectionRectangle.Value.Height - newRect.Height) > 1)
             {
                 _currentSelectionRectangle = newRect;
-                this.PlotModel?.InvalidatePlot(false); // 強制再描画を避ける
+                PlotModel?.InvalidatePlot(false); // 強制再描画を避ける
             }
         }
 
@@ -205,7 +202,7 @@ namespace OxyPlotCustomProject
         /// <param name="endPoint">選択終了点（スクリーン座標）</param>
         public void EndRectangleSelection(ScreenPoint endPoint)
         {
-            if (!_isSelecting || !this.IsSelectionEnabled)
+            if (!_isSelecting || !IsSelectionEnabled)
                 return;
 
             _isSelecting = false;
@@ -213,7 +210,7 @@ namespace OxyPlotCustomProject
             if (_currentSelectionRectangle.HasValue)
             {
                 // スクリーン座標をデータ座標に変換して矩形を作成
-                var currentDataPoint = this.InverseTransform(new ScreenPoint(_currentSelectionRectangle.Value.Right, _currentSelectionRectangle.Value.Bottom));
+                var currentDataPoint = InverseTransform(new ScreenPoint(_currentSelectionRectangle.Value.Right, _currentSelectionRectangle.Value.Bottom));
                 
                 var dataRect = new DataRect(
                     Math.Min(_selectionStartDataPoint.X, currentDataPoint.X),
@@ -233,7 +230,7 @@ namespace OxyPlotCustomProject
             _currentSelectionRectangle = null;
 
             OnRectangleSelectionEnded(new RectangleSelectionEventArgs(endPoint));
-            this.PlotModel?.InvalidatePlot(false);
+            PlotModel?.InvalidatePlot(false);
         }
 
         /// <summary>
@@ -244,9 +241,9 @@ namespace OxyPlotCustomProject
         {
             var newSelectedIndices = new HashSet<int>();
 
-            for (int i = 0; i < this.Points.Count; i++)
+            for (int i = 0; i < Points.Count; i++)
             {
-                var point = this.Points[i];
+                var point = Points[i];
                 var screenPoint = this.Transform(point.X, point.Y);
 
                 if (rectangle.Contains(screenPoint.X, screenPoint.Y))
@@ -272,9 +269,9 @@ namespace OxyPlotCustomProject
         {
             var newSelectedIndices = new HashSet<int>();
 
-            for (int i = 0; i < this.Points.Count; i++)
+            for (int i = 0; i < Points.Count; i++)
             {
-                var point = this.Points[i];
+                var point = Points[i];
 
                 if (dataRect.Contains(point.X, point.Y))
                 {
@@ -297,12 +294,12 @@ namespace OxyPlotCustomProject
         /// <param name="index">ポイントのインデックス</param>
         public void SelectPoint(int index)
         {
-            if (index >= 0 && index < this.Points.Count)
+            if (index >= 0 && index < Points.Count)
             {
                 _selectedPointIndices.Add(index);
                 _pointSelectionStates[index] = true;
                             OnSelectionChanged(new SelectionChangedEventArgs(_selectedPointIndices.ToList()));
-            this.PlotModel?.InvalidatePlot(false);
+            PlotModel?.InvalidatePlot(false);
             }
         }
 
@@ -312,12 +309,12 @@ namespace OxyPlotCustomProject
         /// <param name="index">ポイントのインデックス</param>
         public void DeselectPoint(int index)
         {
-            if (index >= 0 && index < this.Points.Count)
+            if (index >= 0 && index < Points.Count)
             {
                 _selectedPointIndices.Remove(index);
                 _pointSelectionStates[index] = false;
                             OnSelectionChanged(new SelectionChangedEventArgs(_selectedPointIndices.ToList()));
-            this.PlotModel?.InvalidatePlot(false);
+            PlotModel?.InvalidatePlot(false);
             }
         }
 
@@ -332,7 +329,7 @@ namespace OxyPlotCustomProject
                 _pointSelectionStates[i] = false;
             }
             OnSelectionChanged(new SelectionChangedEventArgs(new List<int>()));
-            this.PlotModel?.InvalidatePlot(false);
+            PlotModel?.InvalidatePlot(false);
         }
 
         /// <summary>
@@ -341,7 +338,7 @@ namespace OxyPlotCustomProject
         public void ClearPersistentRectangles()
         {
             _persistentSelectionRectangles.Clear();
-            this.PlotModel?.InvalidatePlot(false);
+            PlotModel?.InvalidatePlot(false);
         }
 
         /// <summary>
@@ -350,7 +347,7 @@ namespace OxyPlotCustomProject
         public void TogglePersistentRectangles()
         {
             ShowPersistentRectangles = !ShowPersistentRectangles;
-            this.PlotModel?.InvalidatePlot(false);
+            PlotModel?.InvalidatePlot(false);
         }
 
         /// <summary>
@@ -368,7 +365,7 @@ namespace OxyPlotCustomProject
         /// <returns>選択されているポイントのリスト</returns>
         public List<ScatterPoint> GetSelectedPoints()
         {
-            return _selectedPointIndices.Select(i => this.Points[i]).ToList();
+            return _selectedPointIndices.Select(i => Points[i]).ToList();
         }
 
         /// <summary>
@@ -377,10 +374,10 @@ namespace OxyPlotCustomProject
         /// <param name="rc">描画コンテキスト</param>
         public override void Render(IRenderContext rc)
         {
-            if (this.PlotModel == null)
+            if (PlotModel == null)
                 return;
 
-            var actualPoints = this.ActualPointsList;
+            var actualPoints = ActualPointsList;
             if (actualPoints == null || actualPoints.Count == 0)
                 return;
 
@@ -395,19 +392,19 @@ namespace OxyPlotCustomProject
                 
                 // ポイントの選択状態に応じて色とサイズを決定
                 var isSelected = _pointSelectionStates.ContainsKey(i) && _pointSelectionStates[i];
-                var pointColor = isSelected ? this.SelectedPointColor : this.UnselectedPointColor;
-                var pointSize = isSelected ? this.SelectedPointSize : this.UnselectedPointSize;
+                var pointColor = isSelected ? SelectedPointColor : UnselectedPointColor;
+                var pointSize = isSelected ? SelectedPointSize : UnselectedPointSize;
 
                 // マーカーを描画
                 rc.DrawMarker(
                     screenPoint,
-                    this.MarkerType,
-                    this.MarkerOutline,
+                    MarkerType,
+                    MarkerOutline,
                     pointSize,
                     pointColor,
-                    this.MarkerStroke,
-                    this.MarkerStrokeThickness,
-                    this.EdgeRenderingMode);
+                    MarkerStroke,
+                    MarkerStrokeThickness,
+                    EdgeRenderingMode);
             }
 
             // 永続的な矩形を描画
@@ -427,10 +424,10 @@ namespace OxyPlotCustomProject
                     );
 
                     // 矩形の塗りつぶし
-                    rc.DrawRectangle(screenRect, this.SelectionRectangleFill, OxyColors.Transparent, 0, this.EdgeRenderingMode);
+                    rc.DrawRectangle(screenRect, SelectionRectangleFill, OxyColors.Transparent, 0, EdgeRenderingMode);
                     
                     // 矩形の境界線
-                    rc.DrawRectangle(screenRect, OxyColors.Transparent, this.SelectionRectangleColor, this.SelectionRectangleThickness, this.EdgeRenderingMode);
+                    rc.DrawRectangle(screenRect, OxyColors.Transparent, SelectionRectangleColor, SelectionRectangleThickness, EdgeRenderingMode);
                 }
             }
 
@@ -440,10 +437,10 @@ namespace OxyPlotCustomProject
                 var rect = _currentSelectionRectangle.Value;
                 
                 // 矩形の塗りつぶし
-                rc.DrawRectangle(rect, this.SelectionRectangleFill, OxyColors.Transparent, 0, this.EdgeRenderingMode);
+                rc.DrawRectangle(rect, SelectionRectangleFill, OxyColors.Transparent, 0, EdgeRenderingMode);
                 
                 // 矩形の境界線
-                rc.DrawRectangle(rect, OxyColors.Transparent, this.SelectionRectangleColor, this.SelectionRectangleThickness, this.EdgeRenderingMode);
+                rc.DrawRectangle(rect, OxyColors.Transparent, SelectionRectangleColor, SelectionRectangleThickness, EdgeRenderingMode);
             }
         }
 
@@ -491,7 +488,7 @@ namespace OxyPlotCustomProject
         /// <param name="selectedIndices">選択されているポイントのインデックスのリスト</param>
         public SelectionChangedEventArgs(List<int> selectedIndices)
         {
-            this.SelectedIndices = selectedIndices;
+            SelectedIndices = selectedIndices;
         }
     }
 
@@ -511,7 +508,7 @@ namespace OxyPlotCustomProject
         /// <param name="screenPoint">スクリーン座標のポイント</param>
         public RectangleSelectionEventArgs(ScreenPoint screenPoint)
         {
-            this.ScreenPoint = screenPoint;
+            ScreenPoint = screenPoint;
         }
     }
 
