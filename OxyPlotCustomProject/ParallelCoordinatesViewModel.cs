@@ -2,19 +2,29 @@ using OxyPlot;
 using OxyPlot.Legends;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Input;
 using System.Windows;
 
 namespace OxyPlotCustomProject
 {
-    public class ParallelCoordinatesViewModel
+    public class ParallelCoordinatesViewModel : INotifyPropertyChanged
     {
         public PlotModel PlotModel { get; }
         
         public ICommand ResetCommand { get; }
         public ICommand MouseMoveCommand { get; }
         public ICommand MouseDownCommand { get; }
+        
+        // ツールチップカスタマイズ用のコマンド
+        public ICommand UseDefaultTooltipCommand { get; }
+        public ICommand UseCustomTooltipCommand { get; }
+        public ICommand ChangeTooltipStyleCommand { get; }
+        
+        public event PropertyChangedEventHandler? PropertyChanged;
+        
+        private ParallelCoordinatesSeries? _currentSeries;
 
         public ParallelCoordinatesViewModel()
         {
@@ -24,6 +34,11 @@ namespace OxyPlotCustomProject
             ResetCommand = new RelayCommand(ResetHighlightAndSelection);
             MouseMoveCommand = new RelayCommand<ScreenPoint>(HandleMouseMove);
             MouseDownCommand = new RelayCommand<ScreenPoint>(HandleMouseDown);
+            
+            // ツールチップカスタマイズ用コマンドを初期化
+            UseDefaultTooltipCommand = new RelayCommand(UseDefaultTooltip);
+            UseCustomTooltipCommand = new RelayCommand(UseCustomTooltip);
+            ChangeTooltipStyleCommand = new RelayCommand(ChangeTooltipStyle);
 
             CreateSampleData();
         }
@@ -99,6 +114,7 @@ namespace OxyPlotCustomProject
                 ShowAxisLabelsBottom = false
             };
 
+            _currentSeries = series;
             this.PlotModel.Series.Add(series);
         }
 
@@ -138,6 +154,96 @@ namespace OxyPlotCustomProject
             {
                 parallelSeries.HandleMouseDown(screenPoint);
             }
+        }
+
+        /// <summary>
+        /// デフォルトのツールチップを使用します
+        /// </summary>
+        private void UseDefaultTooltip()
+        {
+            if (_currentSeries != null)
+            {
+                _currentSeries.CustomTooltipFormatter = null;
+                _currentSeries.TooltipStyle = new TooltipStyle();
+                PlotModel.InvalidatePlot(false);
+            }
+        }
+
+        /// <summary>
+        /// カスタムツールチップを使用します
+        /// </summary>
+        private void UseCustomTooltip()
+        {
+            if (_currentSeries != null)
+            {
+                // カスタムフォーマッターを設定
+                _currentSeries.CustomTooltipFormatter = (lineIndex, dimensions, colorValues) =>
+                {
+                    var lines = new List<string>();
+                    
+                    // ヘッダー（種類名を表示）
+                    if (colorValues != null && lineIndex < colorValues.Length)
+                    {
+                        string speciesName = colorValues[lineIndex] switch
+                        {
+                            0.0 => "Iris Setosa",
+                            0.5 => "Iris Versicolor", 
+                            1.0 => "Iris Virginica",
+                            _ => "Unknown Species"
+                        };
+                        lines.Add($"🌸 {speciesName}");
+                    }
+                    else
+                    {
+                        lines.Add($"📊 データポイント {lineIndex}");
+                    }
+                    
+                    lines.Add("━━━━━━━━━━━━━━━");
+                    
+                    // 各次元の値を日本語で表示
+                    var dimensionLabels = new[] { "萼片の長さ", "萼片の幅", "花弁の長さ", "花弁の幅" };
+                    var units = new[] { "cm", "cm", "cm", "cm" };
+                    
+                    for (int i = 0; i < Math.Min(dimensions.Length, dimensionLabels.Length); i++)
+                    {
+                        if (lineIndex < dimensions[i].Values.Length)
+                        {
+                            double value = dimensions[i].Values[lineIndex];
+                            lines.Add($"• {dimensionLabels[i]}: {value:F1} {units[i]}");
+                        }
+                    }
+                    
+                    return string.Join("\n", lines);
+                };
+                
+                PlotModel.InvalidatePlot(false);
+            }
+        }
+
+        /// <summary>
+        /// ツールチップのスタイルを変更します
+        /// </summary>
+        private void ChangeTooltipStyle()
+        {
+            if (_currentSeries != null)
+            {
+                // スタイルを変更
+                _currentSeries.TooltipStyle = new TooltipStyle
+                {
+                    BackgroundColor = OxyColor.FromArgb(220, 30, 30, 60),  // 半透明の濃い青
+                    BorderColor = OxyColors.Gold,
+                    BorderThickness = 2.0,
+                    TextColor = OxyColors.White,
+                    FontWeight = 700 // Bold weight
+                };
+                
+                PlotModel.InvalidatePlot(false);
+            }
+        }
+
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

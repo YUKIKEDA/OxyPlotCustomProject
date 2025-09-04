@@ -7,6 +7,15 @@ using System.Linq;
 namespace OxyPlotCustomProject
 {
     /// <summary>
+    /// ツールチップテキストを生成するデリゲート
+    /// </summary>
+    /// <param name="lineIndex">線のインデックス</param>
+    /// <param name="dimensions">次元データの配列</param>
+    /// <param name="colorValues">カラー値の配列（nullの場合あり）</param>
+    /// <returns>ツールチップテキスト</returns>
+    public delegate string TooltipTextFormatter(int lineIndex, ParallelDimension[] dimensions, double[]? colorValues);
+
+    /// <summary>
     /// Parallel Coordinates Plot専用のカスタムシリーズ
     /// </summary>
     public class ParallelCoordinatesSeries : ItemsSeries
@@ -177,6 +186,16 @@ namespace OxyPlotCustomProject
         public double AxisThickness { get; set; }
 
         /// <summary>
+        /// カスタムツールチップテキストフォーマッター
+        /// </summary>
+        public TooltipTextFormatter? CustomTooltipFormatter { get; set; }
+
+        /// <summary>
+        /// ツールチップの外観スタイル
+        /// </summary>
+        public TooltipStyle TooltipStyle { get; set; }
+
+        /// <summary>
         /// ParallelCoordinatesSeriesの新しいインスタンスを初期化します
         /// </summary>
         public ParallelCoordinatesSeries()
@@ -216,6 +235,9 @@ namespace OxyPlotCustomProject
             // 軸のデフォルト値
             AxisColor = OxyColors.Black;
             AxisThickness = 1.0;
+            
+            // ツールチップのデフォルト値
+            TooltipStyle = new TooltipStyle();
         }
 
         /// <summary>
@@ -625,32 +647,30 @@ namespace OxyPlotCustomProject
             double x = position.X;
             double y = position.Y;
 
-            // TODO 背景色や線の太さ、色を設定できるようにする
             // 背景を描画
             var backgroundRect = new OxyRect(x, y, tooltipWidth, tooltipHeight);
             rc.DrawRectangle(
                 backgroundRect, 
-                OxyColor.FromArgb(240, 255, 255, 255), 
-                OxyColors.Gray, 
-                1, 
+                TooltipStyle.BackgroundColor, 
+                TooltipStyle.BorderColor, 
+                TooltipStyle.BorderThickness, 
                 EdgeRenderingMode.Automatic
             );
 
             // テキストを描画
             for (int i = 0; i < lines.Length; i++)
             {
-                // TODO 色やアライメントを設定できるようにする
                 var textPosition = new ScreenPoint(x + TooltipPadding, y + TooltipPadding + i * TooltipLineHeight);
                 rc.DrawText(
                     textPosition, 
                     lines[i], 
-                    OxyColors.Black, 
-                    FontFamily, 
-                    TooltipFontSize, 
-                    OxyPlot.FontWeights.Normal, 
+                    TooltipStyle.TextColor, 
+                    TooltipStyle.FontFamily ?? FontFamily, 
+                    TooltipStyle.FontSize ?? TooltipFontSize, 
+                    TooltipStyle.FontWeight, 
                     0, 
-                    OxyPlot.HorizontalAlignment.Left, 
-                    OxyPlot.VerticalAlignment.Top
+                    TooltipStyle.HorizontalAlignment, 
+                    TooltipStyle.VerticalAlignment
                 );
             }
         }
@@ -918,12 +938,35 @@ namespace OxyPlotCustomProject
         /// <returns>ツールチップテキスト</returns>
         private string CreateTooltipText(int lineIndex)
         {
-            // TODO ツールチップテキストの作成をより柔軟にできるようにする
             if (Dimensions == null || Dimensions.Count == 0 || lineIndex < 0)
             {
                 return $"Line {lineIndex}";
             }
 
+            // カスタムフォーマッターが設定されている場合はそれを使用
+            if (CustomTooltipFormatter != null)
+            {
+                try
+                {
+                    return CustomTooltipFormatter(lineIndex, Dimensions.ToArray(), ColorValues);
+                }
+                catch
+                {
+                    // カスタムフォーマッターでエラーが発生した場合はデフォルトにフォールバック
+                }
+            }
+
+            // デフォルトのツールチップテキスト生成
+            return CreateDefaultTooltipText(lineIndex);
+        }
+
+        /// <summary>
+        /// デフォルトのツールチップテキストを作成します
+        /// </summary>
+        /// <param name="lineIndex">線のインデックス</param>
+        /// <returns>デフォルトのツールチップテキスト</returns>
+        private string CreateDefaultTooltipText(int lineIndex)
+        {
             var tooltipLines = new List<string>();
             tooltipLines.Add($"Data Point {lineIndex}");
             tooltipLines.Add(""); // 空行
@@ -1098,6 +1141,71 @@ namespace OxyPlotCustomProject
         {
             Value = value;
             Color = color;
+        }
+    }
+
+    /// <summary>
+    /// ツールチップの外観スタイルを定義するクラス
+    /// </summary>
+    public class TooltipStyle
+    {
+        /// <summary>
+        /// 背景色
+        /// </summary>
+        public OxyColor BackgroundColor { get; set; }
+
+        /// <summary>
+        /// 枠線の色
+        /// </summary>
+        public OxyColor BorderColor { get; set; }
+
+        /// <summary>
+        /// 枠線の太さ
+        /// </summary>
+        public double BorderThickness { get; set; }
+
+        /// <summary>
+        /// テキストの色
+        /// </summary>
+        public OxyColor TextColor { get; set; }
+
+        /// <summary>
+        /// フォントファミリー（nullの場合はシリーズのデフォルトを使用）
+        /// </summary>
+        public string? FontFamily { get; set; }
+
+        /// <summary>
+        /// フォントサイズ（nullの場合はシリーズのデフォルトを使用）
+        /// </summary>
+        public double? FontSize { get; set; }
+
+        /// <summary>
+        /// フォントの太さ
+        /// </summary>
+        public double FontWeight { get; set; }
+
+        /// <summary>
+        /// 水平方向のテキストアライメント
+        /// </summary>
+        public OxyPlot.HorizontalAlignment HorizontalAlignment { get; set; }
+
+        /// <summary>
+        /// 垂直方向のテキストアライメント
+        /// </summary>
+        public OxyPlot.VerticalAlignment VerticalAlignment { get; set; }
+
+        /// <summary>
+        /// TooltipStyleの新しいインスタンスを初期化します（デフォルト値で）
+        /// </summary>
+        public TooltipStyle()
+        {
+            BackgroundColor = OxyColor.FromArgb(240, 255, 255, 255);
+            BorderColor = OxyColors.Gray;
+            BorderThickness = 1.0;
+            TextColor = OxyColors.Black;
+            FontWeight = 400; // Normal weight
+            HorizontalAlignment = OxyPlot.HorizontalAlignment.Left;
+            VerticalAlignment = OxyPlot.VerticalAlignment.Top;
         }
     }
 }

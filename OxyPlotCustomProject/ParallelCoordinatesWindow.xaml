@@ -28,41 +28,126 @@
             Text="Parallel Coordinates Plot - Iris Dataset Sample" />
         
         <!-- コントロール部分 -->
-        <StackPanel 
-            Grid.Row="1"
-            Orientation="Horizontal"
-            HorizontalAlignment="Center"
-            Margin="10,5">
+        <Grid Grid.Row="1" Margin="10,5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
             
-            <TextBlock
-                Text="Instructions: Hover to highlight, click to select/deselect lines"
-                VerticalAlignment="Center"
-                FontSize="11"
-                Foreground="Gray"
-                Margin="0,0,20,0" />
+            <!-- 操作説明とリセットボタン -->
+            <StackPanel 
+                Grid.Row="0"
+                Orientation="Horizontal"
+                HorizontalAlignment="Center">
                 
-            <Button
-                x:Name="resetButton"
-                Content="Reset Selection"
-                Padding="15,8"
-                Background="LightCoral"
-                Foreground="White"
-                FontWeight="Bold"
-                BorderBrush="DarkRed"
-                BorderThickness="1"
-                Command="{Binding ResetCommand}"
-                Cursor="Hand">
-                <Button.Style>
-                    <Style TargetType="Button">
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="IndianRed" />
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </Button.Style>
-            </Button>
-        </StackPanel>
+                <TextBlock
+                    Text="Instructions: Hover to highlight, click to select/deselect lines"
+                    VerticalAlignment="Center"
+                    FontSize="11"
+                    Foreground="Gray"
+                    Margin="0,0,20,0" />
+                    
+                <Button
+                    x:Name="resetButton"
+                    Content="Reset Selection"
+                    Padding="15,8"
+                    Background="LightCoral"
+                    Foreground="White"
+                    FontWeight="Bold"
+                    BorderBrush="DarkRed"
+                    BorderThickness="1"
+                    Command="{Binding ResetCommand}"
+                    Cursor="Hand">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="IndianRed" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </StackPanel>
+            
+            <!-- ツールチップカスタマイズ用ボタン -->
+            <StackPanel 
+                Grid.Row="1"
+                Orientation="Horizontal"
+                HorizontalAlignment="Center"
+                Margin="0,10,0,0">
+                
+                <TextBlock
+                    Text="Tooltip Customization:"
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    FontWeight="Bold"
+                    Margin="0,0,15,0" />
+                
+                <Button
+                    Content="Default Tooltip"
+                    Padding="10,6"
+                    Background="LightBlue"
+                    Foreground="DarkBlue"
+                    BorderBrush="DarkBlue"
+                    BorderThickness="1"
+                    Command="{Binding UseDefaultTooltipCommand}"
+                    Margin="5,0"
+                    Cursor="Hand">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="SkyBlue" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                
+                <Button
+                    Content="Custom Tooltip (Japanese)"
+                    Padding="10,6"
+                    Background="LightGreen"
+                    Foreground="DarkGreen"
+                    BorderBrush="DarkGreen"
+                    BorderThickness="1"
+                    Command="{Binding UseCustomTooltipCommand}"
+                    Margin="5,0"
+                    Cursor="Hand">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="MediumSpringGreen" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                
+                <Button
+                    Content="Change Style (Dark)"
+                    Padding="10,6"
+                    Background="Gold"
+                    Foreground="DarkOrange"
+                    BorderBrush="DarkOrange"
+                    BorderThickness="1"
+                    Command="{Binding ChangeTooltipStyleCommand}"
+                    Margin="5,0"
+                    Cursor="Hand">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="Orange" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </StackPanel>
+        </Grid>
         
         <!-- PlotView -->
         <oxy:PlotView
