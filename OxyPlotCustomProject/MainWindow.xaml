@@ -34,6 +34,12 @@
                 Click="OpenClickableScatterPlot_Click"
                 Content="Open Clickable Scatter Plot"
                 FontSize="14" />
+            <Button
+                Margin="5"
+                Padding="10,5"
+                Click="OpenRectangleSelectionPlot_Click"
+                Content="Open Rectangle Selection Plot"
+                FontSize="14" />
         </StackPanel>
         
         <!--  PlotView bound to the ViewModel's PlotModel  -->

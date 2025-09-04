@@ -24,5 +24,11 @@ namespace OxyPlotCustomProject
             var clickableScatterWindow = new ClickableScatterWindow();
             clickableScatterWindow.Show();
         }
+
+        private void OpenRectangleSelectionPlot_Click(object sender, RoutedEventArgs e)
+        {
+            var rectangleSelectionWindow = new RectangleSelectionWindow();
+            rectangleSelectionWindow.Show();
+        }
     }
 }
