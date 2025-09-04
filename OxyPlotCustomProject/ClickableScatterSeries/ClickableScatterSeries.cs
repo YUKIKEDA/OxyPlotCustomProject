@@ -1,10 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using OxyPlot;
 using OxyPlot.Series;
 
-namespace OxyPlotCustomProject
+namespace OxyPlotCustomProject.ClickableScatterSeries
 {
     /// <summary>
     /// クリック可能な散布図シリーズ
@@ -68,11 +65,11 @@ namespace OxyPlotCustomProject
         /// </summary>
         public ClickableScatterSeries()
         {
-            this.MarkerType = MarkerType.Circle;
-            this.MarkerSize = 8.0;
-            this.MarkerFill = OxyColors.Blue;
-            this.MarkerStroke = OxyColors.Black;
-            this.MarkerStrokeThickness = 1.0;
+            MarkerType = MarkerType.Circle;
+            MarkerSize = 8.0;
+            MarkerFill = OxyColors.Blue;
+            MarkerStroke = OxyColors.Black;
+            MarkerStrokeThickness = 1.0;
         }
 
         /// <summary>
@@ -81,9 +78,9 @@ namespace OxyPlotCustomProject
         /// <param name="point">追加する点</param>
         public void AddPoint(ScatterPoint point)
         {
-            this.Points.Add(point);
-            var index = this.Points.Count - 1;
-            _pointColors[index] = this.MarkerFill;
+            Points.Add(point);
+            var index = Points.Count - 1;
+            _pointColors[index] = MarkerFill;
         }
 
         /// <summary>
@@ -92,9 +89,9 @@ namespace OxyPlotCustomProject
         public void InitializePointColors()
         {
             _pointColors.Clear();
-            for (int i = 0; i < this.Points.Count; i++)
+            for (int i = 0; i < Points.Count; i++)
             {
-                _pointColors[i] = this.MarkerFill;
+                _pointColors[i] = MarkerFill;
             }
         }
 
@@ -106,7 +103,7 @@ namespace OxyPlotCustomProject
         private OxyColor GetOriginalPointColor(int index)
         {
             // 初期点（最初の4つ）は青色、それ以降は赤色
-            return index < 4 ? this.MarkerFill : this.NewPointMarkerColor;
+            return index < 4 ? MarkerFill : NewPointMarkerColor;
         }
 
         /// <summary>
@@ -116,7 +113,7 @@ namespace OxyPlotCustomProject
         /// <returns>クリックが処理された場合はtrue、そうでなければfalse</returns>
         public bool HandleClick(ScreenPoint screenPoint)
         {
-            if (!this.IsClickable)
+            if (!IsClickable)
                 return false;
 
             // プロットエリア内かどうかをチェック
@@ -124,7 +121,7 @@ namespace OxyPlotCustomProject
                 return false;
 
             // スクリーン座標をデータ座標に変換
-            var dataPoint = this.InverseTransform(screenPoint);
+            var dataPoint = InverseTransform(screenPoint);
             
             // データ座標が有効かチェック
             if (double.IsNaN(dataPoint.X) || double.IsNaN(dataPoint.Y))
@@ -135,7 +132,7 @@ namespace OxyPlotCustomProject
             if (clickedPoint != null)
             {
                 // クリックされた点のインデックスを取得
-                var clickedIndex = this.Points.IndexOf(clickedPoint);
+                var clickedIndex = Points.IndexOf(clickedPoint);
                 if (clickedIndex >= 0)
                 {
                     // 同じ点をクリックした場合は何もしない
@@ -146,7 +143,7 @@ namespace OxyPlotCustomProject
                     }
                     
                     // 前回クリックされた点の色をリセット（元の色に戻す）
-                    if (_clickedPointIndex >= 0 && _clickedPointIndex < this.Points.Count)
+                    if (_clickedPointIndex >= 0 && _clickedPointIndex < Points.Count)
                     {
                         // 元の色を取得（初期点は青、追加点は赤）
                         var originalColor = GetOriginalPointColor(_clickedPointIndex);
@@ -161,13 +158,13 @@ namespace OxyPlotCustomProject
                     }
                     
                     // クリックされた点の色を変更
-                    _pointColors[clickedIndex] = this.ClickedPointMarkerColor;
+                    _pointColors[clickedIndex] = ClickedPointMarkerColor;
                     
                     // 新しいクリックされた点のインデックスを保存
                     _clickedPointIndex = clickedIndex;
                     
                     // プロットを更新して色変更を反映
-                    this.PlotModel?.InvalidatePlot(true);
+                    PlotModel?.InvalidatePlot(true);
                 }
                 
                 // 既存の点がクリックされた場合
@@ -177,18 +174,18 @@ namespace OxyPlotCustomProject
             else
             {
                 // 新しい点を追加
-                var newPoint = new ScatterPoint(dataPoint.X, dataPoint.Y, this.NewPointMarkerSize);
-                this.Points.Add(newPoint);
+                var newPoint = new ScatterPoint(dataPoint.X, dataPoint.Y, NewPointMarkerSize);
+                Points.Add(newPoint);
                 
                 // 新しい点の色を初期化（新しく追加された点は赤色）
-                var newIndex = this.Points.Count - 1;
-                _pointColors[newIndex] = this.NewPointMarkerColor;
+                var newIndex = Points.Count - 1;
+                _pointColors[newIndex] = NewPointMarkerColor;
                 
                 // イベントを発生
                 OnPointAdded(new PointAddedEventArgs(newPoint));
                 
                 // プロットを更新
-                this.PlotModel?.InvalidatePlot(true);
+                PlotModel?.InvalidatePlot(true);
                 
                 return true;
             }
@@ -201,11 +198,11 @@ namespace OxyPlotCustomProject
         /// <returns>プロットエリア内の場合はtrue</returns>
         private bool IsPointInPlotArea(ScreenPoint screenPoint)
         {
-            if (this.PlotModel == null)
+            if (PlotModel == null)
                 return false;
 
             // プロットエリアの境界を取得
-            var plotArea = this.PlotModel.PlotArea;
+            var plotArea = PlotModel.PlotArea;
             
             // プロットエリア内かどうかをチェック
             return screenPoint.X >= plotArea.Left &&
@@ -225,7 +222,7 @@ namespace OxyPlotCustomProject
             ScatterPoint? nearestPoint = null;
             double minDistance = double.MaxValue;
 
-            foreach (var point in this.Points)
+            foreach (var point in Points)
             {
                 var pointScreenPos = this.Transform(point.X, point.Y);
                 var distance = screenPoint.DistanceTo(pointScreenPos);
@@ -264,10 +261,10 @@ namespace OxyPlotCustomProject
         /// <param name="index">削除する点のインデックス</param>
         public void RemovePointAt(int index)
         {
-            if (index >= 0 && index < this.Points.Count)
+            if (index >= 0 && index < Points.Count)
             {
-                this.Points.RemoveAt(index);
-                this.PlotModel?.InvalidatePlot(true);
+                Points.RemoveAt(index);
+                PlotModel?.InvalidatePlot(true);
             }
         }
 
@@ -276,10 +273,10 @@ namespace OxyPlotCustomProject
         /// </summary>
         public void ClearPoints()
         {
-            this.Points.Clear();
+            Points.Clear();
             _pointColors.Clear();
             _clickedPointIndex = -1;
-            this.PlotModel?.InvalidatePlot(true);
+            PlotModel?.InvalidatePlot(true);
         }
 
         /// <summary>
@@ -288,10 +285,10 @@ namespace OxyPlotCustomProject
         /// <param name="rc">描画コンテキスト</param>
         public override void Render(IRenderContext rc)
         {
-            if (this.PlotModel == null)
+            if (PlotModel == null)
                 return;
 
-            var actualPoints = this.ActualPointsList;
+            var actualPoints = ActualPointsList;
             if (actualPoints == null || actualPoints.Count == 0)
                 return;
 
@@ -306,23 +303,23 @@ namespace OxyPlotCustomProject
                 
                 // 点の色を決定
                 var pointColor = _pointColors.ContainsKey(i) ? _pointColors[i] : GetOriginalPointColor(i);
-                var pointSize = this.MarkerSize;
+                var pointSize = MarkerSize;
                 
                 if (i == _clickedPointIndex)
                 {
-                    pointSize = this.ClickedPointMarkerSize;
+                    pointSize = ClickedPointMarkerSize;
                 }
 
                 // マーカーを描画
                 rc.DrawMarker(
                     screenPoint,
-                    this.MarkerType,
-                    this.MarkerOutline,
+                    MarkerType,
+                    MarkerOutline,
                     pointSize,
                     pointColor,
-                    this.MarkerStroke,
-                    this.MarkerStrokeThickness,
-                    this.EdgeRenderingMode);
+                    MarkerStroke,
+                    MarkerStrokeThickness,
+                    EdgeRenderingMode);
             }
         }
     }
@@ -343,7 +340,7 @@ namespace OxyPlotCustomProject
         /// <param name="point">クリックされた点</param>
         public PointClickedEventArgs(ScatterPoint point)
         {
-            this.Point = point;
+            Point = point;
         }
     }
 
@@ -363,7 +360,7 @@ namespace OxyPlotCustomProject
         /// <param name="point">追加された点</param>
         public PointAddedEventArgs(ScatterPoint point)
         {
-            this.Point = point;
+            Point = point;
         }
     }
 }

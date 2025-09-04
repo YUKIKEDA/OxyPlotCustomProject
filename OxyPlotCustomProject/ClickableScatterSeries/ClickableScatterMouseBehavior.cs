@@ -2,9 +2,8 @@ using System.Windows;
 using System.Windows.Input;
 using Microsoft.Xaml.Behaviors;
 using OxyPlot;
-using OxyPlot.Series;
 
-namespace OxyPlotCustomProject
+namespace OxyPlotCustomProject.ClickableScatterSeries
 {
     /// <summary>
     /// クリック可能な散布図シリーズ専用のマウスビヘイビア

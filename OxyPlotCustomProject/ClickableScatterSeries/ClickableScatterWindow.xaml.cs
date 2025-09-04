@@ -1,4 +1,5 @@
 using System.Windows;
+using OxyPlotCustomProject.ClickableScatterSeries;
 
 namespace OxyPlotCustomProject
 {

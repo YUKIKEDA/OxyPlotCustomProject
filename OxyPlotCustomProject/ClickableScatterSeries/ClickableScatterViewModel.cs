@@ -1,4 +1,3 @@
-using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -7,7 +6,7 @@ using OxyPlot;
 using OxyPlot.Legends;
 using OxyPlot.Series;
 
-namespace OxyPlotCustomProject
+namespace OxyPlotCustomProject.ClickableScatterSeries
 {
     public class ClickableScatterViewModel : INotifyPropertyChanged
     {
@@ -37,12 +36,12 @@ namespace OxyPlotCustomProject
 
         public ClickableScatterViewModel()
         {
-            this.PlotModel = new PlotModel { Title = "クリック可能な散布図" };
-            this.Points = new ObservableCollection<ScatterPoint>();
+            PlotModel = new PlotModel { Title = "クリック可能な散布図" };
+            Points = new ObservableCollection<ScatterPoint>();
 
             // コマンドの初期化
-            this.ClearAddedPointsCommand = new RelayCommand(ClearAddedPoints, () => Points.Count > _initialPointCount);
-            this.RemoveLastAddedPointCommand = new RelayCommand(RemoveLastAddedPoint, () => Points.Count > _initialPointCount);
+            ClearAddedPointsCommand = new RelayCommand(ClearAddedPoints, () => Points.Count > _initialPointCount);
+            RemoveLastAddedPointCommand = new RelayCommand(RemoveLastAddedPoint, () => Points.Count > _initialPointCount);
 
             // 凡例の設定
             var legend = new Legend
@@ -51,7 +50,7 @@ namespace OxyPlotCustomProject
                 LegendPosition = LegendPosition.TopRight,
                 LegendPlacement = LegendPlacement.Outside
             };
-            this.PlotModel.Legends.Add(legend);
+            PlotModel.Legends.Add(legend);
 
             // クリック可能な散布図シリーズの作成
             _clickableScatterSeries = new ClickableScatterSeries
@@ -80,21 +79,21 @@ namespace OxyPlotCustomProject
             // 初期点の色を明示的に設定
             _clickableScatterSeries.InitializePointColors();
 
-            this.PlotModel.Series.Add(_clickableScatterSeries);
+            PlotModel.Series.Add(_clickableScatterSeries);
 
             // 初期点をコレクションに追加
             foreach (var point in _clickableScatterSeries.Points)
             {
-                this.Points.Add(point);
+                Points.Add(point);
             }
 
             // プロパティ変更通知の設定
-            this.Points.CollectionChanged += (s, e) => OnPropertyChanged(nameof(PointCountText));
+            Points.CollectionChanged += (s, e) => OnPropertyChanged(nameof(PointCountText));
         }
 
         private void OnPointAdded(object? sender, PointAddedEventArgs e)
         {
-            this.Points.Add(e.Point);
+            Points.Add(e.Point);
             StatusMessage = $"新しい点が追加されました: ({e.Point.X:F2}, {e.Point.Y:F2})";
             
             // コマンドの実行可能性を更新
@@ -110,11 +109,11 @@ namespace OxyPlotCustomProject
         private void ClearAddedPoints()
         {
             // 追加した点のみを削除（初期点は残す）
-            while (this.Points.Count > _initialPointCount)
+            while (Points.Count > _initialPointCount)
             {
-                var lastIndex = this.Points.Count - 1;
+                var lastIndex = Points.Count - 1;
                 _clickableScatterSeries.RemovePointAt(lastIndex);
-                this.Points.RemoveAt(lastIndex);
+                Points.RemoveAt(lastIndex);
             }
             
             StatusMessage = "追加した点がクリアされました";
@@ -126,11 +125,11 @@ namespace OxyPlotCustomProject
 
         private void RemoveLastAddedPoint()
         {
-            if (this.Points.Count > _initialPointCount)
+            if (Points.Count > _initialPointCount)
             {
-                var lastIndex = this.Points.Count - 1;
+                var lastIndex = Points.Count - 1;
                 _clickableScatterSeries.RemovePointAt(lastIndex);
-                this.Points.RemoveAt(lastIndex);
+                Points.RemoveAt(lastIndex);
                 StatusMessage = "最後に追加した点が削除されました";
                 
                 // コマンドの実行可能性を更新
