@@ -51,6 +51,16 @@ namespace OxyPlotCustomProject.ClickableScatterSeries
         public double ClickedPointMarkerSize { get; set; } = 10.0;
 
         /// <summary>
+        /// クリック検出の許容距離（ピクセル）
+        /// </summary>
+        public double ClickTolerance { get; set; } = 10.0;
+
+        /// <summary>
+        /// 初期点の数（初期点設定時に自動的に決定される）
+        /// </summary>
+        private int _initialPointCount = 0;
+
+        /// <summary>
         /// クリックされた点のインデックス
         /// </summary>
         private int _clickedPointIndex = -1;
@@ -58,7 +68,7 @@ namespace OxyPlotCustomProject.ClickableScatterSeries
         /// <summary>
         /// 各点の色情報を保持する辞書
         /// </summary>
-        private Dictionary<int, OxyColor> _pointColors = new Dictionary<int, OxyColor>();
+        private readonly Dictionary<int, OxyColor> _pointColors = [];
 
         /// <summary>
         /// 新しい <see cref="ClickableScatterSeries"/> のインスタンスを初期化します
@@ -73,26 +83,25 @@ namespace OxyPlotCustomProject.ClickableScatterSeries
         }
 
         /// <summary>
-        /// 点を追加する際に色情報も初期化します
+        /// 初期点を設定します（この時点で初期点の数が自動的に決定されます）
         /// </summary>
-        /// <param name="point">追加する点</param>
-        public void AddPoint(ScatterPoint point)
+        /// <param name="initialPoints">初期点のコレクション</param>
+        public void SetInitialPoints(IEnumerable<ScatterPoint> initialPoints)
         {
-            Points.Add(point);
-            var index = Points.Count - 1;
-            _pointColors[index] = MarkerFill;
-        }
-
-        /// <summary>
-        /// 初期化時にすべての点の色を設定します
-        /// </summary>
-        public void InitializePointColors()
-        {
+            // 既存の点をクリア
+            Points.Clear();
             _pointColors.Clear();
-            for (int i = 0; i < Points.Count; i++)
+            _clickedPointIndex = -1;
+            
+            // 初期点を追加
+            foreach (var point in initialPoints)
             {
-                _pointColors[i] = MarkerFill;
+                Points.Add(point);
+                _pointColors[Points.Count - 1] = MarkerFill;
             }
+            
+            // 初期点の数を設定
+            _initialPointCount = Points.Count;
         }
 
         /// <summary>
@@ -102,8 +111,8 @@ namespace OxyPlotCustomProject.ClickableScatterSeries
         /// <returns>元の色</returns>
         private OxyColor GetOriginalPointColor(int index)
         {
-            // 初期点（最初の4つ）は青色、それ以降は赤色
-            return index < 4 ? MarkerFill : NewPointMarkerColor;
+            // 初期点は青色、それ以降は赤色
+            return index < _initialPointCount ? MarkerFill : NewPointMarkerColor;
         }
 
         /// <summary>
@@ -114,21 +123,27 @@ namespace OxyPlotCustomProject.ClickableScatterSeries
         public bool HandleClick(ScreenPoint screenPoint)
         {
             if (!IsClickable)
+            {
                 return false;
+            }
 
             // プロットエリア内かどうかをチェック
             if (!IsPointInPlotArea(screenPoint))
+            {
                 return false;
+            }
 
             // スクリーン座標をデータ座標に変換
             var dataPoint = InverseTransform(screenPoint);
             
             // データ座標が有効かチェック
             if (double.IsNaN(dataPoint.X) || double.IsNaN(dataPoint.Y))
+            {
                 return false;
+            }
 
             // 既存の点がクリックされたかチェック
-            var clickedPoint = FindNearestPoint(screenPoint, 10.0); // 10ピクセル以内
+            var clickedPoint = FindNearestPoint(screenPoint, ClickTolerance);
             if (clickedPoint != null)
             {
                 // クリックされた点のインデックスを取得
@@ -199,7 +214,9 @@ namespace OxyPlotCustomProject.ClickableScatterSeries
         private bool IsPointInPlotArea(ScreenPoint screenPoint)
         {
             if (PlotModel == null)
+            {
                 return false;
+            }
 
             // プロットエリアの境界を取得
             var plotArea = PlotModel.PlotArea;
@@ -269,40 +286,35 @@ namespace OxyPlotCustomProject.ClickableScatterSeries
         }
 
         /// <summary>
-        /// すべての点をクリアします
-        /// </summary>
-        public void ClearPoints()
-        {
-            Points.Clear();
-            _pointColors.Clear();
-            _clickedPointIndex = -1;
-            PlotModel?.InvalidatePlot(true);
-        }
-
-        /// <summary>
         /// シリーズを描画します（各点の色を個別に設定）
         /// </summary>
         /// <param name="rc">描画コンテキスト</param>
         public override void Render(IRenderContext rc)
         {
             if (PlotModel == null)
+            {
                 return;
+            }
 
             var actualPoints = ActualPointsList;
             if (actualPoints == null || actualPoints.Count == 0)
+            {
                 return;
+            }
 
             // 各点を個別の色で描画
             for (int i = 0; i < actualPoints.Count; i++)
             {
                 var point = actualPoints[i];
                 if (point == null || double.IsNaN(point.X) || double.IsNaN(point.Y))
+                {
                     continue;
+                }
 
                 var screenPoint = this.Transform(point.X, point.Y);
                 
                 // 点の色を決定
-                var pointColor = _pointColors.ContainsKey(i) ? _pointColors[i] : GetOriginalPointColor(i);
+                var pointColor = _pointColors.TryGetValue(i, out OxyColor value) ? value : GetOriginalPointColor(i);
                 var pointSize = MarkerSize;
                 
                 if (i == _clickedPointIndex)

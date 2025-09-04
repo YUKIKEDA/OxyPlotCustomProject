@@ -34,6 +34,7 @@ namespace OxyPlotCustomProject.ClickableScatterSeries
             get => $"点の数: {Points.Count}";
         }
 
+
         public ClickableScatterViewModel()
         {
             PlotModel = new PlotModel { Title = "クリック可能な散布図" };
@@ -70,14 +71,15 @@ namespace OxyPlotCustomProject.ClickableScatterSeries
             _clickableScatterSeries.PointAdded += OnPointAdded;
             _clickableScatterSeries.PointClicked += OnPointClicked;
 
-            // 初期データの追加
-            _clickableScatterSeries.AddPoint(new ScatterPoint(0, 0, 8.0));
-            _clickableScatterSeries.AddPoint(new ScatterPoint(1, 1, 8.0));
-            _clickableScatterSeries.AddPoint(new ScatterPoint(2, 0.5, 8.0));
-            _clickableScatterSeries.AddPoint(new ScatterPoint(3, 1.2, 8.0));
-
-            // 初期点の色を明示的に設定
-            _clickableScatterSeries.InitializePointColors();
+            // 初期点を設定（この時点で初期点の数が自動的に決定される）
+            var initialPoints = new[]
+            {
+                new ScatterPoint(0, 0, 8.0),
+                new ScatterPoint(1, 1, 8.0),
+                new ScatterPoint(2, 0.5, 8.0),
+                new ScatterPoint(3, 1.2, 8.0)
+            };
+            _clickableScatterSeries.SetInitialPoints(initialPoints);
 
             PlotModel.Series.Add(_clickableScatterSeries);
 
