@@ -203,14 +203,15 @@ namespace OxyPlotCustomProject.RectangleSelectionScatterSeries
 
             if (_currentSelectionRectangle.HasValue)
             {
-                // スクリーン座標をデータ座標に変換して矩形を作成
-                var currentDataPoint = InverseTransform(new ScreenPoint(_currentSelectionRectangle.Value.Right, _currentSelectionRectangle.Value.Bottom));
+                // 終了点をデータ座標に変換
+                var endDataPoint = InverseTransform(endPoint);
                 
+                // 開始点と終了点から正しい矩形を作成
                 var dataRect = new DataRect(
-                    Math.Min(_selectionStartDataPoint.X, currentDataPoint.X),
-                    Math.Min(_selectionStartDataPoint.Y, currentDataPoint.Y),
-                    Math.Abs(currentDataPoint.X - _selectionStartDataPoint.X),
-                    Math.Abs(currentDataPoint.Y - _selectionStartDataPoint.Y)
+                    Math.Min(_selectionStartDataPoint.X, endDataPoint.X),
+                    Math.Min(_selectionStartDataPoint.Y, endDataPoint.Y),
+                    Math.Abs(endDataPoint.X - _selectionStartDataPoint.X),
+                    Math.Abs(endDataPoint.Y - _selectionStartDataPoint.Y)
                 );
 
                 // 永続的な矩形リストをクリアして、新しい矩形のみを追加
